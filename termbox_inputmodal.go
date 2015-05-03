@@ -7,15 +7,19 @@ import (
 type InputModal struct {
 	title               string
 	text                string
-	value               string
+	input               *InputField
 	x, y, width, height int
 	show_help           bool
 	cursor              int
 	bg, fg              termbox.Attribute
+	is_done             bool
+	value               string
 }
 
-func CreateInputModal(text string, x, y, width, height int, fg, bg termbox.Attribute) *InputModal {
-	i := InputModal{text: text, x: x, y: y, width: width, height: height, fg: fg, bg: bg}
+func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *InputModal {
+	i := InputModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg}
+	i.input = CreateInputField(i.x+1, i.y+3, i.width-2, 2, i.fg, i.bg)
+	i.input.bordered = true
 	return &i
 }
 
@@ -28,12 +32,6 @@ func (i *InputModal) SetTitle(s string) *InputModal {
 func (i *InputModal) GetText() string { return i.text }
 func (i *InputModal) SetText(s string) *InputModal {
 	i.text = s
-	return i
-}
-
-func (i *InputModal) GetValue() string { return i.value }
-func (i *InputModal) SetValue(s string) *InputModal {
-	i.value = s
 	return i
 }
 
@@ -66,24 +64,6 @@ func (i *InputModal) ShowHelp(b bool) *InputModal {
 	return i
 }
 
-func (i *InputModal) GetCursorPos() int { return i.cursor }
-func (i *InputModal) SetCursorPos(c int) *InputModal {
-	i.cursor = c
-	return i
-}
-func (i *InputModal) MoveCursorLeft() *InputModal {
-	if len(i.value)+(i.GetCursorPos()) > 0 {
-		i.cursor = i.GetCursorPos() - 1
-	}
-	return i
-}
-func (i *InputModal) MoveCursorRight() *InputModal {
-	if i.GetCursorPos() < 0 {
-		i.cursor = i.GetCursorPos() + 1
-	}
-	return i
-}
-
 func (i *InputModal) GetBackground() termbox.Attribute { return i.bg }
 func (i *InputModal) SetBackground(bg termbox.Attribute) *InputModal {
 	i.bg = bg
@@ -95,18 +75,33 @@ func (i *InputModal) SetForeground(fg termbox.Attribute) *InputModal {
 	i.fg = fg
 	return i
 }
+func (i *InputModal) SetDone(b bool) *InputModal {
+	i.is_done = b
+	return i
+}
+func (i *InputModal) IsDone() bool {
+	return i.is_done
+}
+func (i *InputModal) GetValue() string {
+	return i.value
+}
+func (i *InputModal) Clear() *InputModal {
+	i.title = ""
+	i.text = ""
+	i.input.SetValue("")
+	i.is_done = false
+	return i
+}
 
 func (i *InputModal) HandleKeyPress(event termbox.Event) bool {
 	if event.Key == termbox.KeyEnter {
 		// Done editing
-	} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-		i.value = i.value[:len(i.value)-1]
-		i.cursor -= 1
+		i.value = i.input.GetValue()
+		i.is_done = true
+		return true
 	} else {
-		i.value += string(event.Ch)
-		i.cursor += 1
+		return i.input.HandleKeyPress(event)
 	}
-	return true
 }
 func (i *InputModal) Draw() {
 	// First blank out the area we'll be putting the modal
@@ -114,21 +109,19 @@ func (i *InputModal) Draw() {
 	// Now draw the border
 	DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
 
-	DrawBorder(i.x+2, i.y+2, i.x+i.width-2, i.y+4, i.fg, i.bg)
-	// TODO: Output Cursor at appropriate spot
-	var output_string_1, output_string_2 string
-	var cursor_rune rune
-	if len(i.value) > 0 {
-		output_string_1 = i.value[:(len(i.value) - 1 + i.cursor)]
-		output_string_2 = i.value[(len(i.value) - 1 + i.cursor):]
-		cursor_rune = ' '
-	} else {
-		output_string_1 = ""
-		output_string_2 = ""
-		cursor_rune = ' '
+	next_y := i.y + 1
+	// The title
+	if i.title != "" {
+		DrawStringAtPoint(i.title, i.x+1, next_y, i.fg, i.bg)
+		next_y += 1
+		FillWithChar('-', i.x+1, next_y, i.x+i.width-1, next_y, i.fg, i.bg)
+		next_y += 1
 	}
-
-	DrawStringAtPoint(output_string_1, i.x+3, i.y+3, i.fg, i.bg)
-	termbox.SetCell(i.x+len(output_string_1), i.y+3, cursor_rune, i.bg, i.fg)
-	DrawStringAtPoint(output_string_2, i.x+3+len(output_string_1)+1, i.y+3, i.fg, i.bg)
+	if i.text != "" {
+		DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
+		next_y += 1
+	}
+	i.input.SetY(next_y)
+	i.input.Draw()
+	next_y += 3
 }

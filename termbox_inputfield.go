@@ -75,8 +75,8 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 		} else if i.cursor == 0 {
 			i.value = fmt.Sprintf("%s%s", i.value, string(event.Ch))
 		} else {
-			str_pt_1 := i.value
-			str_pt_2 := i.value
+			str_pt_1 := i.value[:(len(i.value) + i.cursor)]
+			str_pt_2 := i.value[(len(i.value) + i.cursor):]
 			i.value = fmt.Sprintf("%s%s%s", str_pt_1, string(event.Ch), str_pt_2)
 		}
 	}
@@ -94,7 +94,7 @@ func (i *InputField) Draw() {
 		if i.cursor+len(i.value) == 0 {
 			str_pt_1 = ""
 			str_pt_2 = i.value[1:]
-			cursor_rune = rune(i.value[1])
+			cursor_rune = rune(i.value[0])
 		} else if i.cursor == 0 {
 			str_pt_1 = i.value
 			str_pt_2 = ""
