@@ -13,12 +13,12 @@ type InputModal struct {
 	cursor              int
 	bg, fg              termbox.Attribute
 	is_done             bool
-	value               string
 }
 
 func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *InputModal {
 	i := InputModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg}
 	i.input = CreateInputField(i.x+1, i.y+3, i.width-2, 2, i.fg, i.bg)
+	i.show_help = true
 	i.input.bordered = true
 	return &i
 }
@@ -82,9 +82,12 @@ func (i *InputModal) SetDone(b bool) *InputModal {
 func (i *InputModal) IsDone() bool {
 	return i.is_done
 }
-func (i *InputModal) GetValue() string {
-	return i.value
+func (i *InputModal) GetValue() string { return i.input.GetValue() }
+func (i *InputModal) SetValue(s string) *InputModal {
+	i.input.SetValue(s)
+	return i
 }
+
 func (i *InputModal) Clear() *InputModal {
 	i.title = ""
 	i.text = ""
@@ -96,7 +99,6 @@ func (i *InputModal) Clear() *InputModal {
 func (i *InputModal) HandleKeyPress(event termbox.Event) bool {
 	if event.Key == termbox.KeyEnter {
 		// Done editing
-		i.value = i.input.GetValue()
 		i.is_done = true
 		return true
 	} else {
@@ -124,4 +126,7 @@ func (i *InputModal) Draw() {
 	i.input.SetY(next_y)
 	i.input.Draw()
 	next_y += 3
+	if i.show_help {
+		DrawStringAtPoint("(ENTER) to Accept. (ESC) to Cancel.", i.x+1, next_y, i.fg, i.bg)
+	}
 }
