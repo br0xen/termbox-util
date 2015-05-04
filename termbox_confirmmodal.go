@@ -124,8 +124,10 @@ func (i *ConfirmModal) Draw() {
 		DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
 		next_y += 1
 	}
-	next_y += 3
+	next_y += 2
 	if i.show_help {
-		DrawStringAtPoint("(Y/y) Confirm. (N/n) Reject.", i.x+1, next_y, i.fg, i.bg)
+		help_string := " (Y/y) Confirm. (N/n) Reject. "
+		help_x := (i.x + i.width) - len(help_string) - 1
+		DrawStringAtPoint(help_string, help_x, next_y, i.fg, i.bg)
 	}
 }

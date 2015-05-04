@@ -105,6 +105,7 @@ func (i *InputModal) HandleKeyPress(event termbox.Event) bool {
 		return i.input.HandleKeyPress(event)
 	}
 }
+
 func (i *InputModal) Draw() {
 	// First blank out the area we'll be putting the modal
 	FillWithChar(' ', i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
@@ -121,12 +122,14 @@ func (i *InputModal) Draw() {
 	}
 	if i.text != "" {
 		DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
-		next_y += 1
+		next_y += 2
 	}
 	i.input.SetY(next_y)
 	i.input.Draw()
 	next_y += 3
 	if i.show_help {
-		DrawStringAtPoint("(ENTER) to Accept. (ESC) to Cancel.", i.x+1, next_y, i.fg, i.bg)
+		help_string := " (ENTER) to Accept. (ESC) to Cancel. "
+		help_x := (i.x + i.width - len(help_string)) - 1
+		DrawStringAtPoint(help_string, help_x, next_y, i.fg, i.bg)
 	}
 }
