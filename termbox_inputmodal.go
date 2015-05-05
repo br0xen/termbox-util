@@ -13,6 +13,7 @@ type InputModal struct {
 	cursor              int
 	bg, fg              termbox.Attribute
 	is_done             bool
+	is_visible          bool
 }
 
 func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *InputModal {
@@ -75,6 +76,16 @@ func (i *InputModal) SetForeground(fg termbox.Attribute) *InputModal {
 	i.fg = fg
 	return i
 }
+
+func (i *InputModal) Show() *InputModal {
+	i.is_visible = true
+	return i
+}
+func (i *InputModal) Hide() *InputModal {
+	i.is_visible = false
+	return i
+}
+
 func (i *InputModal) SetDone(b bool) *InputModal {
 	i.is_done = b
 	return i
@@ -94,6 +105,7 @@ func (i *InputModal) Clear() *InputModal {
 	i.text = ""
 	i.input.SetValue("")
 	i.is_done = false
+	i.is_visible = false
 	return i
 }
 
@@ -108,29 +120,31 @@ func (i *InputModal) HandleKeyPress(event termbox.Event) bool {
 }
 
 func (i *InputModal) Draw() {
-	// First blank out the area we'll be putting the modal
-	FillWithChar(' ', i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
-	// Now draw the border
-	DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+	if i.is_visible {
+		// First blank out the area we'll be putting the modal
+		FillWithChar(' ', i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+		// Now draw the border
+		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
 
-	next_y := i.y + 1
-	// The title
-	if i.title != "" {
-		DrawStringAtPoint(i.title, i.x+1, next_y, i.fg, i.bg)
-		next_y += 1
-		FillWithChar('-', i.x+1, next_y, i.x+i.width-1, next_y, i.fg, i.bg)
-		next_y += 1
-	}
-	if i.text != "" {
-		DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
-		next_y += 2
-	}
-	i.input.SetY(next_y)
-	i.input.Draw()
-	next_y += 3
-	if i.show_help {
-		help_string := " (ENTER) to Accept. (ESC) to Cancel. "
-		help_x := (i.x + i.width - len(help_string)) - 1
-		DrawStringAtPoint(help_string, help_x, next_y, i.fg, i.bg)
+		next_y := i.y + 1
+		// The title
+		if i.title != "" {
+			DrawStringAtPoint(i.title, i.x+1, next_y, i.fg, i.bg)
+			next_y += 1
+			FillWithChar('-', i.x+1, next_y, i.x+i.width-1, next_y, i.fg, i.bg)
+			next_y += 1
+		}
+		if i.text != "" {
+			DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
+			next_y += 2
+		}
+		i.input.SetY(next_y)
+		i.input.Draw()
+		next_y += 3
+		if i.show_help {
+			help_string := " (ENTER) to Accept. (ESC) to Cancel. "
+			help_x := (i.x + i.width - len(help_string)) - 1
+			DrawStringAtPoint(help_string, help_x, next_y, i.fg, i.bg)
+		}
 	}
 }

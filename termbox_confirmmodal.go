@@ -14,6 +14,7 @@ type ConfirmModal struct {
 	is_done             bool
 	accepted            bool
 	value               string
+	is_visible          bool
 }
 
 func CreateConfirmModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *ConfirmModal {
@@ -81,6 +82,15 @@ func (i *ConfirmModal) SetForeground(fg termbox.Attribute) *ConfirmModal {
 func (i *ConfirmModal) IsDone() bool { return i.is_done }
 func (i *ConfirmModal) SetDone(b bool) *ConfirmModal {
 	i.is_done = b
+	return i
+}
+
+func (i *ConfirmModal) Show() *ConfirmModal {
+	i.is_visible = true
+	return i
+}
+func (i *ConfirmModal) Hide() *ConfirmModal {
+	i.is_visible = false
 	return i
 }
 
