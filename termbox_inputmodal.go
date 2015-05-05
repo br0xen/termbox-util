@@ -82,8 +82,12 @@ func (i *InputModal) SetDone(b bool) *InputModal {
 func (i *InputModal) IsDone() bool {
 	return i.is_done
 }
+func (i *InputModal) SetValue(s string) *InputModal {
+	i.input.SetValue(s)
+	return i
+}
 func (i *InputModal) GetValue() string {
-	return i.value
+	return i.input.GetValue()
 }
 func (i *InputModal) Clear() *InputModal {
 	i.title = ""
