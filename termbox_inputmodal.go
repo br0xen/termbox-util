@@ -13,12 +13,12 @@ type InputModal struct {
 	cursor              int
 	bg, fg              termbox.Attribute
 	is_done             bool
-	value               string
 }
 
 func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *InputModal {
 	i := InputModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg}
 	i.input = CreateInputField(i.x+1, i.y+3, i.width-2, 2, i.fg, i.bg)
+	i.show_help = true
 	i.input.bordered = true
 	return &i
 }
@@ -82,13 +82,13 @@ func (i *InputModal) SetDone(b bool) *InputModal {
 func (i *InputModal) IsDone() bool {
 	return i.is_done
 }
+
+func (i *InputModal) GetValue() string { return i.input.GetValue() }
 func (i *InputModal) SetValue(s string) *InputModal {
 	i.input.SetValue(s)
 	return i
 }
-func (i *InputModal) GetValue() string {
-	return i.input.GetValue()
-}
+
 func (i *InputModal) Clear() *InputModal {
 	i.title = ""
 	i.text = ""
@@ -100,13 +100,13 @@ func (i *InputModal) Clear() *InputModal {
 func (i *InputModal) HandleKeyPress(event termbox.Event) bool {
 	if event.Key == termbox.KeyEnter {
 		// Done editing
-		i.value = i.input.GetValue()
 		i.is_done = true
 		return true
 	} else {
 		return i.input.HandleKeyPress(event)
 	}
 }
+
 func (i *InputModal) Draw() {
 	// First blank out the area we'll be putting the modal
 	FillWithChar(' ', i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
@@ -123,9 +123,14 @@ func (i *InputModal) Draw() {
 	}
 	if i.text != "" {
 		DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
-		next_y += 1
+		next_y += 2
 	}
 	i.input.SetY(next_y)
 	i.input.Draw()
 	next_y += 3
+	if i.show_help {
+		help_string := " (ENTER) to Accept. (ESC) to Cancel. "
+		help_x := (i.x + i.width - len(help_string)) - 1
+		DrawStringAtPoint(help_string, help_x, next_y, i.fg, i.bg)
+	}
 }

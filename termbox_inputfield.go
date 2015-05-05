@@ -69,6 +69,9 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 		if i.cursor < 0 {
 			i.cursor += 1
 		}
+	} else if event.Key == termbox.KeyCtrlU {
+		// Ctrl+U Clears the Input
+		i.value = ""
 	} else {
 		if i.cursor+len(i.value) == 0 {
 			i.value = fmt.Sprintf("%s%s", string(event.Ch), i.value)
