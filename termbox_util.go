@@ -49,10 +49,14 @@ func AlignText(txt string, width int, align TextAlignment) string {
 	num_spaces := width - len(txt)
 	switch align {
 	case ALIGN_CENTER:
-		return fmt.Sprintf("%s%s%s",
-			strings.Repeat(" ", num_spaces/2),
-			txt, strings.Repeat(" ", num_spaces/2),
-		)
+		if num_spaces/2 > 0 {
+			return fmt.Sprintf("%s%s%s",
+				strings.Repeat(" ", num_spaces/2),
+				txt, strings.Repeat(" ", num_spaces/2),
+			)
+		} else {
+			return txt
+		}
 	case ALIGN_RIGHT:
 		return fmt.Sprintf("%s%s", strings.Repeat(" ", num_spaces), txt)
 	default:

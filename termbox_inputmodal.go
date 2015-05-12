@@ -136,7 +136,7 @@ func (i *InputModal) Draw() {
 		}
 		if i.text != "" {
 			DrawStringAtPoint(i.text, i.x+1, next_y, i.fg, i.bg)
-			next_y += 2
+			next_y += 1
 		}
 		i.input.SetY(next_y)
 		i.input.Draw()
