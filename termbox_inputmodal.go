@@ -123,13 +123,15 @@ func (i *InputModal) Draw() {
 	if i.is_visible {
 		// First blank out the area we'll be putting the modal
 		FillWithChar(' ', i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
-		// Now draw the border
-		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
-
 		next_y := i.y + 1
 		// The title
 		if i.title != "" {
-			DrawStringAtPoint(i.title, i.x+1, next_y, i.fg, i.bg)
+			if len(i.title) > i.width {
+				diff := i.width - len(i.title)
+				DrawStringAtPoint(i.title[:len(i.title)+diff-1], i.x+1, next_y, i.fg, i.bg)
+			} else {
+				DrawStringAtPoint(i.title, i.x+1, next_y, i.fg, i.bg)
+			}
 			next_y += 1
 			FillWithChar('-', i.x+1, next_y, i.x+i.width-1, next_y, i.fg, i.bg)
 			next_y += 1
@@ -146,5 +148,7 @@ func (i *InputModal) Draw() {
 			help_x := (i.x + i.width - len(help_string)) - 1
 			DrawStringAtPoint(help_string, help_x, next_y, i.fg, i.bg)
 		}
+		// Now draw the border
+		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
 	}
 }
