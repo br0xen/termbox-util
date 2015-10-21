@@ -2,8 +2,9 @@ package termbox_util
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"strings"
+
+	"github.com/nsf/termbox-go"
 )
 
 type TextAlignment int
@@ -64,4 +65,4 @@ func AlignText(txt string, width int, align TextAlignment) string {
 	}
 }
 
-/* More advanced things are in their respective files*/
+/* More advanced things are in their respective files */
