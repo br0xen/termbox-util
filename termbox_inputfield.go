@@ -2,6 +2,7 @@ package termbox_util
 
 import (
 	"fmt"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -73,14 +74,26 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 		// Ctrl+U Clears the Input
 		i.value = ""
 	} else {
+		// Get the rune to add to our value. Space and Tab are special cases where
+		// we can't use the event's rune directly
+		var ch string
+		switch event.Key {
+		case termbox.KeySpace:
+			ch = " "
+		case termbox.KeyTab:
+			ch = "\t"
+		default:
+			ch = string(event.Ch)
+		}
+
 		if i.cursor+len(i.value) == 0 {
-			i.value = fmt.Sprintf("%s%s", string(event.Ch), i.value)
+			i.value = fmt.Sprintf("%s%s", ch, i.value)
 		} else if i.cursor == 0 {
-			i.value = fmt.Sprintf("%s%s", i.value, string(event.Ch))
+			i.value = fmt.Sprintf("%s%s", i.value, ch)
 		} else {
 			str_pt_1 := i.value[:(len(i.value) + i.cursor)]
 			str_pt_2 := i.value[(len(i.value) + i.cursor):]
-			i.value = fmt.Sprintf("%s%s%s", str_pt_1, string(event.Ch), str_pt_2)
+			i.value = fmt.Sprintf("%s%s%s", str_pt_1, ch, str_pt_2)
 		}
 	}
 	return true
