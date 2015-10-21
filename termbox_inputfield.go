@@ -147,5 +147,5 @@ func (i *InputField) Draw() {
 	}
 	x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
 	termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-	DrawStringAtPoint(str_pt_2, x+1, y, i.fg, i.bg)
+	DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
 }
