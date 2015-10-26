@@ -35,6 +35,30 @@ func (i *ASCIIArt) SetY(y int) *ASCIIArt {
 	return i
 }
 
+// GetHeight Returns the number of strings in the contents slice
+func (i *ASCIIArt) GetHeight() int {
+	return len(i.contents)
+}
+
+// SetContents Sets the contents of i to c
+func (i *ASCIIArt) SetContents(c []string) *ASCIIArt {
+	i.contents = c
+	return i
+}
+
+// GetContents returns the ascii art
+func (i *ASCIIArt) GetContents() []string {
+	return i.contents
+}
+
+// SetContentLine Sets a specific line of the contents to s
+func (i *ASCIIArt) SetContentLine(s string, idx int) *ASCIIArt {
+	if idx >= 0 && idx < len(i.contents) {
+		i.contents[idx] = s
+	}
+	return i
+}
+
 // GetBackground Return the current background color of the modal
 func (i *ASCIIArt) GetBackground() termbox.Attribute { return i.bg }
 

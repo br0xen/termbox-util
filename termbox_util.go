@@ -69,7 +69,10 @@ func AlignText(txt string, width int, align TextAlignment) string {
 	case AlignRight:
 		return fmt.Sprintf("%s%s", strings.Repeat(" ", numSpaces), txt)
 	default:
-		return fmt.Sprintf("%s%s", txt, strings.Repeat(" ", numSpaces))
+		if numSpaces >= 0 {
+			return fmt.Sprintf("%s%s", txt, strings.Repeat(" ", numSpaces))
+		}
+		return txt
 	}
 }
 
