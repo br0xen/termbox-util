@@ -15,6 +15,7 @@ type Menu struct {
 	disabledBg, disabledFg termbox.Attribute
 	isDone                 bool
 	bordered               bool
+	vimMode									bool
 }
 
 // CreateMenu Creates a menu with the specified attributes
@@ -178,6 +179,20 @@ func (i *Menu) SelectNextOption() *Menu {
 	return i
 }
 
+// SetOptionDisabled Disables the specified option
+func (i *Menu) SetOptionDisabled(idx int) {
+	if len(i.options) > idx {
+		i.GetOptionFromIndex(idx).Disable()
+	}
+}
+
+// SetOptionEnabled Enables the specified option
+func (i *Menu) SetOptionEnabled(idx int) {
+	if len(i.options) > idx {
+		i.GetOptionFromIndex(idx).Enable()
+	}
+}
+
 // HelpIsShown returns true or false if the help is displayed
 func (i *Menu) HelpIsShown() bool { return i.showHelp }
 
@@ -223,6 +238,18 @@ func (i *Menu) SetBordered(b bool) *Menu {
 	return i
 }
 
+// EnableVimMode Enables h,j,k,l navigation
+func (i *Menu) EnableVimMode() *Menu {
+	i.vimMode = true
+	return i
+}
+
+// DisableVimMode Disables h,j,k,l navigation
+func (i *Menu) DisableVimMode() *Menu {
+	i.vimMode = false
+	return i
+}
+
 // HandleKeyPress handles the termbox event and returns whether it was consumed
 func (i *Menu) HandleKeyPress(event termbox.Event) bool {
 	if event.Key == termbox.KeyEnter {
@@ -235,6 +262,14 @@ func (i *Menu) HandleKeyPress(event termbox.Event) bool {
 		i.SelectPrevOption()
 	case termbox.KeyArrowDown:
 		i.SelectNextOption()
+	}
+	if i.vimMode {
+		switch event.Ch {
+		case 'j':
+			i.SelectNextOption()
+		case 'k':
+			i.SelectPrevOption()
+		}
 	}
 	if i.GetSelectedIndex() != currentIdx {
 		return true
