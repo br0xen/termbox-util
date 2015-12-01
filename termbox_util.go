@@ -42,16 +42,16 @@ func FillWithChar(r rune, x1, y1, x2, y2 int, fg termbox.Attribute, bg termbox.A
 
 // DrawBorder Draw a border around the area inside x1,y1 -> x2, y2
 func DrawBorder(x1, y1, x2, y2 int, fg termbox.Attribute, bg termbox.Attribute) {
-	termbox.SetCell(x1, y1, '┌', fg, bg)
-	FillWithChar('─', x1+1, y1, x2-1, y1, fg, bg)
-	termbox.SetCell(x2, y1, '┐', fg, bg)
+	termbox.SetCell(x1, y1, '+', fg, bg)
+	FillWithChar('-', x1+1, y1, x2-1, y1, fg, bg)
+	termbox.SetCell(x2, y1, '+', fg, bg)
 
 	FillWithChar('|', x1, y1+1, x1, y2-1, fg, bg)
 	FillWithChar('|', x2, y1+1, x2, y2-1, fg, bg)
 
-	termbox.SetCell(x1, y2, '└', fg, bg)
-	FillWithChar('─', x1+1, y2, x2-1, y2, fg, bg)
-	termbox.SetCell(x2, y2, '┘', fg, bg)
+	termbox.SetCell(x1, y2, '+', fg, bg)
+	FillWithChar('-', x1+1, y2, x2-1, y2, fg, bg)
+	termbox.SetCell(x2, y2, '+', fg, bg)
 }
 
 // AlignText Aligns the text txt within width characters using the specified alignment
@@ -69,7 +69,10 @@ func AlignText(txt string, width int, align TextAlignment) string {
 	case AlignRight:
 		return fmt.Sprintf("%s%s", strings.Repeat(" ", numSpaces), txt)
 	default:
-		return fmt.Sprintf("%s%s", txt, strings.Repeat(" ", numSpaces))
+		if numSpaces >= 0 {
+			return fmt.Sprintf("%s%s", txt, strings.Repeat(" ", numSpaces))
+		}
+		return txt
 	}
 }
 
