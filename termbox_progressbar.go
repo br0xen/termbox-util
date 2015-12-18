@@ -12,6 +12,7 @@ type ProgressBar struct {
 	emptyChar      rune
 	bordered       bool
 	alignment      TextAlignment
+	colorized      bool
 
 	x, y          int
 	width, height int
@@ -174,6 +175,16 @@ func (i *ProgressBar) Align(a TextAlignment) *ProgressBar {
 	return i
 }
 
+// SetColorized sets whether the progress bar should be colored
+// depending on how full it is:
+//  10% - Red
+//	50% - Yellow
+//	80% - Green
+func (i *ProgressBar) SetColorized(c bool) *ProgressBar {
+	i.colorized = c
+	return i
+}
+
 // HandleKeyPress accepts the termbox event and returns whether it was consumed
 func (i *ProgressBar) HandleKeyPress(event termbox.Event) bool {
 	return false
@@ -183,11 +194,21 @@ func (i *ProgressBar) HandleKeyPress(event termbox.Event) bool {
 func (i *ProgressBar) Draw() {
 	// For now, just draw a [####  ] bar
 	// TODO: make this more advanced
+	useFg := i.fg
+	if i.colorized {
+		if i.GetPercent() < 10 {
+			useFg = termbox.ColorRed
+		} else if i.GetPercent() < 50 {
+			useFg = termbox.ColorYellow
+		} else {
+			useFg = termbox.ColorGreen
+		}
+	}
 	drawX, drawY := i.x, i.y
 	fillWidth, fillHeight := i.width-2, i.height
 	DrawStringAtPoint("[", drawX, drawY, i.fg, i.bg)
 	numFull := int(float64(fillWidth) * float64(i.progress) / float64(i.total))
-	FillWithChar(i.fullChar, drawX+1, drawY, drawX+1+numFull, drawY+(fillHeight-1), i.fg, i.bg)
+	FillWithChar(i.fullChar, drawX+1, drawY, drawX+1+numFull, drawY+(fillHeight-1), useFg, i.bg)
 	DrawStringAtPoint("]", drawX+i.width-1, drawY, i.fg, i.bg)
 
 	/*
