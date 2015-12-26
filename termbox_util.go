@@ -19,6 +19,18 @@ const (
 	AlignRight
 )
 
+/* Basic Input Helpers */
+
+// KeyIsAlphaNumeric Returns whether the termbox event is an
+// Alpha-Numeric Key Press
+func KeyIsAlphaNumeric(event termbox.Event) {
+	k := event.Ch
+	if (k >= 'a' && k <= 'z') || (k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9') {
+		return true
+	}
+	return false
+}
+
 /* Basic Output Helpers */
 
 // DrawStringAtPoint Draw a string of text at x, y with foreground color fg, background color bg
