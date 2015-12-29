@@ -23,7 +23,7 @@ const (
 
 // KeyIsAlphaNumeric Returns whether the termbox event is an
 // Alpha-Numeric Key Press
-func KeyIsAlphaNumeric(event termbox.Event) {
+func KeyIsAlphaNumeric(event termbox.Event) bool {
 	k := event.Ch
 	if (k >= 'a' && k <= 'z') || (k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9') {
 		return true
