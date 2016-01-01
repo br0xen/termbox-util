@@ -139,6 +139,12 @@ func (i *InputModal) SetValue(s string) *InputModal {
 	return i
 }
 
+// SetInputWrap sets whether the input field will wrap long text or not
+func (i *InputModal) SetInputWrap(b bool) *InputModal {
+	i.input.SetWrap(b)
+	return i
+}
+
 // Clear Resets all non-positional parameters of the modal
 func (i *InputModal) Clear() *InputModal {
 	i.title = ""

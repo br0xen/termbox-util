@@ -13,6 +13,7 @@ type InputField struct {
 	cursor              int
 	fg, bg              termbox.Attribute
 	bordered            bool
+	wrap                bool
 }
 
 // CreateInputField creates an input field at x, y that is w by h
@@ -72,6 +73,16 @@ func (i *InputField) IsBordered() bool { return i.bordered }
 // SetBordered sets whether we render a border around the input field
 func (i *InputField) SetBordered(b bool) *InputField {
 	i.bordered = b
+	return i
+}
+
+// DoesWrap returns true or false if this input field wraps text
+func (i *InputField) DoesWrap() bool { return i.wrap }
+
+// SetWrap sets whether we wrap the text at width.
+// If 'wrap' is set, we automatically increase the height when we need to.
+func (i *InputField) SetWrap(b bool) *InputField {
+	i.wrap = b
 	return i
 }
 
@@ -144,6 +155,30 @@ func (i *InputField) Draw() {
 		}
 	} else {
 		strPt1, strPt2, cursorRune = "", "", ' '
+	}
+	// Check if the value is longer than the width
+	if len(i.value) > i.width {
+		if i.wrap {
+			// If we're wrapping the text, figure out how that goes
+		} else {
+			// Not wrapping, so figure out what we need to trim
+			// We have i.width/2 space for each strPt
+			if len(strPt1) > i.width/2 {
+				if len(strPt2) > i.width/2 {
+					// Both sides are too long, center the cursor
+				} else {
+					// Just side 1 is too long, figure out how much we can show
+					tmp := i.width - 1
+					tmp -= len(strPt2)
+					strPt1 = strPt1[tmp:]
+				}
+			} else if len(strPt2) > i.width/2 {
+				// Just side 2 is too long, figure out how much we can show
+				tmp := i.width - 1
+				tmp -= len(strPt1)
+				strPt2 = strPt2[:tmp]
+			}
+		}
 	}
 	x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
 	termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
