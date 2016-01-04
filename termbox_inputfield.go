@@ -156,31 +156,27 @@ func (i *InputField) Draw() {
 	} else {
 		strPt1, strPt2, cursorRune = "", "", ' '
 	}
+	// strPt1, strPt2 = all of the text before, after the cursor
+	// cursorRune is the rune on the cursor
 	// Check if the value is longer than the width
-	if len(i.value) > i.width {
-		if i.wrap {
-			// If we're wrapping the text, figure out how that goes
-		} else {
-			// Not wrapping, so figure out what we need to trim
-			// We have i.width/2 space for each strPt
-			if len(strPt1) > i.width/2 {
-				if len(strPt2) > i.width/2 {
-					// Both sides are too long, center the cursor
-				} else {
-					// Just side 1 is too long, figure out how much we can show
-					tmp := i.width - 1
-					tmp -= len(strPt2)
-					strPt1 = strPt1[tmp:]
-				}
-			} else if len(strPt2) > i.width/2 {
-				// Just side 2 is too long, figure out how much we can show
-				tmp := i.width - 1
-				tmp -= len(strPt1)
-				strPt2 = strPt2[:tmp]
+	maxWidth := i.width
+	if i.bordered {
+		maxWidth -= 2
+	}
+	cursorRune2 := cursorRune
+	if len(i.value) > maxWidth {
+		var chopLeft bool
+		for len(strPt1)+len(strPt2)+1 > maxWidth {
+			if chopLeft && len(strPt1) > 0 {
+				strPt1 = strPt1[1:]
+			} else if !chopLeft && len(strPt2) > 0 {
+				strPt2 = strPt2[:len(strPt2)-1]
 			}
+			chopLeft = !chopLeft
 		}
 	}
 	x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-	termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+	termbox.SetCell(x, y, cursorRune2, i.bg, i.fg)
 	DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
+	termbox.SetCell(x, y+1, cursorRune, i.bg, i.fg)
 }
