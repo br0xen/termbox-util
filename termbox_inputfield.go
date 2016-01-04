@@ -158,25 +158,50 @@ func (i *InputField) Draw() {
 	}
 	// strPt1, strPt2 = all of the text before, after the cursor
 	// cursorRune is the rune on the cursor
-	// Check if the value is longer than the width
 	maxWidth := i.width
 	if i.bordered {
-		maxWidth -= 2
+		maxWidth--
 	}
-	cursorRune2 := cursorRune
-	if len(i.value) > maxWidth {
-		var chopLeft bool
+	if i.wrap {
+		// Split the text into maxWidth chunks
+		x, y := i.x+1, i.y+1
+		for len(strPt1) > 0 {
+			if len(strPt1) > maxWidth {
+				x, y = DrawStringAtPoint(strPt1[:maxWidth], x, y, i.fg, i.bg)
+				strPt1 = strPt1[maxWidth+1:]
+				continue
+			}
+			x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
+		}
+		if maxWidth-len(strPt1) <= 0 {
+			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		}
+		if maxWidth-len(strPt1)-1 > 0 {
+			DrawStringAtPoint(strPt2[:(maxWidth-len(strPt1)-1)], x+1, y, i.fg, i.bg)
+			strPt2 = strPt2[(maxWidth - len(strPt1)):]
+		}
+		for len(strPt2) > 0 {
+			if len(strPt2) > maxWidth {
+				x, y = DrawStringAtPoint(strPt2[:maxWidth], x, y, i.fg, i.bg)
+				strPt2 = strPt2[maxWidth+1:]
+				continue
+			}
+			x, y = DrawStringAtPoint(strPt2, x, y, i.fg, i.bg)
+		}
+	} else {
+		// Not wrapping, just adjust the viewport
 		for len(strPt1)+len(strPt2)+1 > maxWidth {
-			if chopLeft && len(strPt1) > 0 {
+			if len(strPt1) >= len(strPt2) {
+				if len(strPt1) == 0 {
+					break
+				}
 				strPt1 = strPt1[1:]
-			} else if !chopLeft && len(strPt2) > 0 {
+			} else {
 				strPt2 = strPt2[:len(strPt2)-1]
 			}
-			chopLeft = !chopLeft
 		}
+		x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
+		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
 	}
-	x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-	termbox.SetCell(x, y, cursorRune2, i.bg, i.fg)
-	DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
-	termbox.SetCell(x, y+1, cursorRune, i.bg, i.fg)
 }
