@@ -15,7 +15,7 @@ type Menu struct {
 	disabledBg, disabledFg termbox.Attribute
 	isDone                 bool
 	bordered               bool
-	vimMode									bool
+	vimMode                bool
 }
 
 // CreateMenu Creates a menu with the specified attributes
