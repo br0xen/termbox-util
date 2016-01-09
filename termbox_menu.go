@@ -15,7 +15,7 @@ type Menu struct {
 	disabledBg, disabledFg termbox.Attribute
 	isDone                 bool
 	bordered               bool
-	vimMode									bool
+	vimMode                bool
 }
 
 // CreateMenu Creates a menu with the specified attributes
@@ -252,7 +252,7 @@ func (i *Menu) DisableVimMode() *Menu {
 
 // HandleKeyPress handles the termbox event and returns whether it was consumed
 func (i *Menu) HandleKeyPress(event termbox.Event) bool {
-	if event.Key == termbox.KeyEnter {
+	if event.Key == termbox.KeyEnter || event.Key == termbox.KeySpace {
 		i.isDone = true
 		return true
 	}
@@ -308,6 +308,11 @@ func (i *Menu) Draw() {
 			FillWithChar('-', optionStartX, optionStartY, optionWidth, optionStartY, i.fg, i.bg)
 			optionStartY++
 		}
+	}
+
+	// If the currently selected option is disabled, move to the next
+	if i.GetSelectedOption().IsDisabled() {
+		i.SelectNextOption()
 	}
 
 	// Print the options
