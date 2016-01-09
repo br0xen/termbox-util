@@ -2,6 +2,8 @@ package termboxUtil
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/nsf/termbox-go"
 )
@@ -88,9 +90,7 @@ func (i *InputField) SetWrap(b bool) *InputField {
 
 // HandleKeyPress accepts the termbox event and returns whether it was consumed
 func (i *InputField) HandleKeyPress(event termbox.Event) bool {
-	if event.Key == termbox.KeyEnter {
-		// Done editing
-	} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
 		if len(i.value) > 0 {
 			i.value = i.value[:len(i.value)-1]
 		}
@@ -103,8 +103,8 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 			i.cursor++
 		}
 	} else if event.Key == termbox.KeyCtrlU {
-		// Ctrl+U Clears the Input
-		i.value = ""
+		// Ctrl+U Clears the Input (before the cursor)
+		i.value = i.value[i.cursor:]
 	} else {
 		// Get the rune to add to our value. Space and Tab are special cases where
 		// we can't use the event's rune directly
@@ -114,6 +114,8 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 			ch = " "
 		case termbox.KeyTab:
 			ch = "\t"
+		case termbox.KeyEnter:
+			ch = "\n"
 		default:
 			ch = string(event.Ch)
 		}
@@ -156,31 +158,61 @@ func (i *InputField) Draw() {
 	} else {
 		strPt1, strPt2, cursorRune = "", "", ' '
 	}
-	// Check if the value is longer than the width
-	if len(i.value) > i.width {
-		if i.wrap {
-			// If we're wrapping the text, figure out how that goes
-		} else {
-			// Not wrapping, so figure out what we need to trim
-			// We have i.width/2 space for each strPt
-			if len(strPt1) > i.width/2 {
-				if len(strPt2) > i.width/2 {
-					// Both sides are too long, center the cursor
-				} else {
-					// Just side 1 is too long, figure out how much we can show
-					tmp := i.width - 1
-					tmp -= len(strPt2)
-					strPt1 = strPt1[tmp:]
+	// strPt1, strPt2 = all of the text before, after the cursor
+	// cursorRune is the rune on the cursor
+	maxWidth := i.width
+	if i.bordered {
+		maxWidth--
+	}
+	DrawStringAtPoint(strconv.Itoa(strings.Count(i.value, "\n")), i.x, i.y, i.fg, i.bg)
+	if i.wrap {
+		// Split the text into maxWidth chunks
+		x, y := i.x+1, i.y+1
+		nlCount := strings.Count(strPt1, "\n")
+		for len(strPt1) > maxWidth || nlCount > 0 {
+			nlIdx := strings.Index(strPt1, "\n")
+			breakAt := maxWidth
+			if nlIdx < maxWidth {
+				breakAt = nlIdx + 1
+			}
+			x, y = DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
+			strPt1 = strPt1[breakAt:]
+			if len(strPt1) > 0 {
+				x = i.x + 1
+				y++
+			}
+			nlCount = strings.Count(strPt1, "\n")
+		}
+		x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
+		if maxWidth-len(strPt1) <= 0 {
+			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		}
+		if len(strPt2) > 0 {
+			if maxWidth-len(strPt1)-1 > 0 {
+				DrawStringAtPoint(strPt2[:(maxWidth-len(strPt1)-1)], x+1, y, i.fg, i.bg)
+				strPt2 = strPt2[(maxWidth - len(strPt1)):]
+			}
+			nlCount := strings.Count(strPt2, "\n")
+			for len(strPt2) > maxWidth || nlCount > 0 {
+				x, y = DrawStringAtPoint(strPt2[:maxWidth], x, y, i.fg, i.bg)
+				strPt2 = strPt2[maxWidth:]
+			}
+			x, y = DrawStringAtPoint(strPt2, x, y, i.fg, i.bg)
+		}
+	} else {
+		// Not wrapping, just adjust the viewport
+		for len(strPt1)+len(strPt2)+1 > maxWidth {
+			if len(strPt1) >= len(strPt2) {
+				if len(strPt1) == 0 {
+					break
 				}
-			} else if len(strPt2) > i.width/2 {
-				// Just side 2 is too long, figure out how much we can show
-				tmp := i.width - 1
-				tmp -= len(strPt1)
-				strPt2 = strPt2[:tmp]
+				strPt1 = strPt1[1:]
+			} else {
+				strPt2 = strPt2[:len(strPt2)-1]
 			}
 		}
+		x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
+		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
 	}
-	x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-	termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-	DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
 }
