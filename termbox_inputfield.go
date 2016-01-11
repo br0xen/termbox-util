@@ -2,7 +2,6 @@ package termboxUtil
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/nsf/termbox-go"
@@ -135,8 +134,15 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 
 // Draw outputs the input field on the screen
 func (i *InputField) Draw() {
+	maxWidth := i.width
+	x, y := i.x, i.y
+	startX := i.x
 	if i.bordered {
 		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+		maxWidth--
+		x++
+		y++
+		startX++
 	}
 
 	var strPt1, strPt2 string
@@ -160,28 +166,14 @@ func (i *InputField) Draw() {
 	}
 	// strPt1, strPt2 = all of the text before, after the cursor
 	// cursorRune is the rune on the cursor
-	maxWidth := i.width
-	if i.bordered {
-		maxWidth--
-	}
-	DrawStringAtPoint(strconv.Itoa(strings.Count(i.value, "\n")), i.x, i.y, i.fg, i.bg)
 	if i.wrap {
 		// Split the text into maxWidth chunks
-		x, y := i.x+1, i.y+1
-		nlCount := strings.Count(strPt1, "\n")
-		for len(strPt1) > maxWidth || nlCount > 0 {
-			nlIdx := strings.Index(strPt1, "\n")
+		for len(strPt1) > maxWidth { //|| nlCount > 0 {
 			breakAt := maxWidth
-			if nlIdx < maxWidth {
-				breakAt = nlIdx + 1
-			}
-			x, y = DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
+			DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
+			x = startX
+			y++
 			strPt1 = strPt1[breakAt:]
-			if len(strPt1) > 0 {
-				x = i.x + 1
-				y++
-			}
-			nlCount = strings.Count(strPt1, "\n")
 		}
 		x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
 		if maxWidth-len(strPt1) <= 0 {
