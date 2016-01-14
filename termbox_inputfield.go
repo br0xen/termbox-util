@@ -1,7 +1,6 @@
 package termboxUtil
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/nsf/termbox-go"
@@ -15,6 +14,7 @@ type InputField struct {
 	fg, bg              termbox.Attribute
 	bordered            bool
 	wrap                bool
+	multiline           bool
 }
 
 // CreateInputField creates an input field at x, y that is w by h
@@ -81,9 +81,17 @@ func (i *InputField) SetBordered(b bool) *InputField {
 func (i *InputField) DoesWrap() bool { return i.wrap }
 
 // SetWrap sets whether we wrap the text at width.
-// If 'wrap' is set, we automatically increase the height when we need to.
 func (i *InputField) SetWrap(b bool) *InputField {
 	i.wrap = b
+	return i
+}
+
+// IsMultiline returns true or false if this field can have multiple lines
+func (i *InputField) IsMultiline() bool { return i.multiline }
+
+// SetMultiline sets whether the field can have multiple lines
+func (i *InputField) SetMultiline(b bool) *InputField {
+	i.multiline = b
 	return i
 }
 
@@ -114,19 +122,23 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 		case termbox.KeyTab:
 			ch = "\t"
 		case termbox.KeyEnter:
-			ch = "\n"
+			if i.multiline {
+				ch = "\n"
+			}
 		default:
-			ch = string(event.Ch)
+			if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
+				ch = string(event.Ch)
+			}
 		}
 
 		if i.cursor+len(i.value) == 0 {
-			i.value = fmt.Sprintf("%s%s", ch, i.value)
+			i.value = string(ch) + i.value
 		} else if i.cursor == 0 {
-			i.value = fmt.Sprintf("%s%s", i.value, ch)
+			i.value = i.value + string(ch)
 		} else {
 			strPt1 := i.value[:(len(i.value) + i.cursor)]
 			strPt2 := i.value[(len(i.value) + i.cursor):]
-			i.value = fmt.Sprintf("%s%s%s", strPt1, ch, strPt2)
+			i.value = strPt1 + string(ch) + strPt2
 		}
 	}
 	return true
@@ -135,76 +147,142 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 // Draw outputs the input field on the screen
 func (i *InputField) Draw() {
 	maxWidth := i.width
+	maxHeight := i.height
 	x, y := i.x, i.y
 	startX := i.x
+	startY := i.y
 	if i.bordered {
 		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
 		maxWidth--
+		maxHeight--
 		x++
 		y++
 		startX++
+		startY++
 	}
 
-	var strPt1, strPt2 string
-	var cursorRune rune
-	if len(i.value) > 0 {
-		if i.cursor+len(i.value) == 0 {
-			strPt1 = ""
-			strPt2 = i.value[1:]
-			cursorRune = rune(i.value[0])
-		} else if i.cursor == 0 {
-			strPt1 = i.value
-			strPt2 = ""
-			cursorRune = ' '
-		} else {
-			strPt1 = i.value[:(len(i.value) + i.cursor)]
-			strPt2 = i.value[(len(i.value)+i.cursor)+1:]
-			cursorRune = rune(i.value[len(i.value)+i.cursor])
-		}
+	var valSplit []string //, cursorLine []string
+	if i.multiline {
+		valSplit = strings.Split(i.value, "\n")
 	} else {
-		strPt1, strPt2, cursorRune = "", "", ' '
+		if i.wrap {
+			var j int
+			for j < len(i.value) {
+				l, h := j, j+i.width
+				//if l >= i.cursor && h <= i.cursor {
+				//	cursorLine = append(cursorLine, i.value[l:i.cursor])
+				//	cursorLine = append(cursorLine, i.value[i.cursor]...)
+				//	cursorLine = append(cursorLine, i.value[i.cursor:h])
+				//} else {
+				valSplit = append(valSplit, i.value[l:h])
+				//}
+				j = h
+			}
+		}
 	}
-	// strPt1, strPt2 = all of the text before, after the cursor
-	// cursorRune is the rune on the cursor
-	if i.wrap {
-		// Split the text into maxWidth chunks
-		for len(strPt1) > maxWidth { //|| nlCount > 0 {
-			breakAt := maxWidth
-			DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
-			x = startX
-			y++
-			strPt1 = strPt1[breakAt:]
-		}
-		x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
-		if maxWidth-len(strPt1) <= 0 {
-			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-		}
-		if len(strPt2) > 0 {
-			if maxWidth-len(strPt1)-1 > 0 {
-				DrawStringAtPoint(strPt2[:(maxWidth-len(strPt1)-1)], x+1, y, i.fg, i.bg)
-				strPt2 = strPt2[(maxWidth - len(strPt1)):]
-			}
-			nlCount := strings.Count(strPt2, "\n")
-			for len(strPt2) > maxWidth || nlCount > 0 {
-				x, y = DrawStringAtPoint(strPt2[:maxWidth], x, y, i.fg, i.bg)
-				strPt2 = strPt2[maxWidth:]
-			}
-			x, y = DrawStringAtPoint(strPt2, x, y, i.fg, i.bg)
-		}
-	} else {
-		// Not wrapping, just adjust the viewport
-		for len(strPt1)+len(strPt2)+1 > maxWidth {
-			if len(strPt1) >= len(strPt2) {
-				if len(strPt1) == 0 {
-					break
+	for j := range valSplit {
+		DrawStringAtPoint(valSplit[j], x, y+j, i.fg, i.bg)
+	}
+	//var valSplit []string
+	// if it's not multiline, new lines aren't allowed in the input
+	/*
+		multiSplit := strings.Split(i.value, "\n")
+		var cursCount int
+		for j := range multiSplit {
+			for k := range multiSplit[j] {
+				if cursCount == i.cursor {
+					termbox.SetCell(x+k, y+j, rune(multiSplit[j][k]), i.fg, i.bg)
+				} else {
+					termbox.SetCell(x+k, y+j, rune(multiSplit[j][k]), i.bg, i.fg)
 				}
-				strPt1 = strPt1[1:]
-			} else {
-				strPt2 = strPt2[:len(strPt2)-1]
+				cursCount++
 			}
 		}
-		x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
-	}
+	*/
+	/*
+		if i.wrap {
+			// Automatically wrap the text
+			for j := range multiSplit {
+				for len(multiSplit[j]) > maxWidth {
+					valSplit = append(valSplit, multiSplit[j][:maxWidth])
+					multiSplit[j] = multiSplit[j][maxWidth:]
+				}
+			}
+		} else {
+			valSplit = multiSplit
+		}
+		for j := range valSplit {
+			DrawStringAtPoint(valSplit[j], x, y+j, i.fg, i.bg)
+		}
+
+		/*
+			var strPt1, strPt2 string
+			var cursorRune rune
+			if len(i.value) > 0 {
+				if i.cursor+len(i.value) == 0 {
+					strPt1 = ""
+					strPt2 = i.value[1:]
+					cursorRune = rune(i.value[0])
+				} else if i.cursor == 0 {
+					strPt1 = i.value
+					strPt2 = ""
+					cursorRune = ' '
+				} else {
+					strPt1 = i.value[:(len(i.value) + i.cursor)]
+					strPt2 = i.value[(len(i.value)+i.cursor)+1:]
+					cursorRune = rune(i.value[len(i.value)+i.cursor])
+				}
+			} else {
+				strPt1, strPt2, cursorRune = "", "", ' '
+			}
+			// strPt1, strPt2 = all of the text before, after the cursor
+			// cursorRune is the rune on the cursor
+			if i.wrap {
+				// Split the text into maxWidth chunks
+				for len(strPt1) > maxWidth {
+					breakAt := maxWidth
+					DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
+					x = startX
+					y++
+					strPt1 = strPt1[breakAt:]
+				}
+				x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
+				if x >= maxWidth {
+					y++
+					x = startX
+				}
+				termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+				x++
+				if len(strPt2) > 0 {
+					lenLeft := maxWidth - len(strPt1) - 1
+					if lenLeft > 0 && len(strPt2) > lenLeft {
+						DrawStringAtPoint(strPt2[:lenLeft], x+1, y, i.fg, i.bg)
+						strPt2 = strPt2[lenLeft:]
+					}
+					for len(strPt2) > maxWidth {
+						breakAt := maxWidth
+						DrawStringAtPoint(strPt2[:breakAt], x, y, i.fg, i.bg)
+						x = startX
+						y++
+						strPt2 = strPt2[breakAt:]
+					}
+					x, y = DrawStringAtPoint(strPt2, x, y, i.fg, i.bg)
+				}
+			} else {
+				// Not wrapping, just adjust the viewport
+				for len(strPt1)+len(strPt2)+1 > maxWidth {
+					if len(strPt1) >= len(strPt2) {
+						if len(strPt1) == 0 {
+							break
+						}
+						strPt1 = strPt1[1:]
+					} else {
+						strPt2 = strPt2[:len(strPt2)-1]
+					}
+				}
+				x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
+				termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+				DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
+			}
+	*/
 }
