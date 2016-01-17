@@ -27,72 +27,64 @@ func CreateInputField(x, y, w, h int, fg, bg termbox.Attribute) *InputField {
 func (i *InputField) GetValue() string { return i.value }
 
 // SetValue sets the current text in the InputField to s
-func (i *InputField) SetValue(s string) *InputField {
+func (i *InputField) SetValue(s string) {
 	i.value = s
-	return i
 }
 
 // GetX returns the x position of the input field
 func (i *InputField) GetX() int { return i.x }
 
 // SetX sets the x position of the input field
-func (i *InputField) SetX(x int) *InputField {
+func (i *InputField) SetX(x int) {
 	i.x = x
-	return i
 }
 
 // GetY returns the y position of the input field
 func (i *InputField) GetY() int { return i.y }
 
 // SetY sets the y position of the input field
-func (i *InputField) SetY(y int) *InputField {
+func (i *InputField) SetY(y int) {
 	i.y = y
-	return i
 }
 
 // GetWidth returns the current width of the input field
 func (i *InputField) GetWidth() int { return i.width }
 
 // SetWidth sets the current width of the input field
-func (i *InputField) SetWidth(w int) *InputField {
+func (i *InputField) SetWidth(w int) {
 	i.width = w
-	return i
 }
 
 // GetHeight returns the current height of the input field
 func (i *InputField) GetHeight() int { return i.height }
 
 // SetHeight sets the current height of the input field
-func (i *InputField) SetHeight(h int) *InputField {
+func (i *InputField) SetHeight(h int) {
 	i.height = h
-	return i
 }
 
 // IsBordered returns true or false if this input field has a border
 func (i *InputField) IsBordered() bool { return i.bordered }
 
 // SetBordered sets whether we render a border around the input field
-func (i *InputField) SetBordered(b bool) *InputField {
+func (i *InputField) SetBordered(b bool) {
 	i.bordered = b
-	return i
 }
 
 // DoesWrap returns true or false if this input field wraps text
 func (i *InputField) DoesWrap() bool { return i.wrap }
 
 // SetWrap sets whether we wrap the text at width.
-func (i *InputField) SetWrap(b bool) *InputField {
+func (i *InputField) SetWrap(b bool) {
 	i.wrap = b
-	return i
 }
 
 // IsMultiline returns true or false if this field can have multiple lines
 func (i *InputField) IsMultiline() bool { return i.multiline }
 
 // SetMultiline sets whether the field can have multiple lines
-func (i *InputField) SetMultiline(b bool) *InputField {
+func (i *InputField) SetMultiline(b bool) {
 	i.multiline = b
-	return i
 }
 
 // HandleKeyPress accepts the termbox event and returns whether it was consumed

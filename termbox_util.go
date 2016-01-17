@@ -7,6 +7,19 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+type termboxControl interface {
+	GetX() int
+	SetX(int)
+	GetY() int
+	SetY(int)
+	GetWidth() int
+	SetWidth(int)
+	GetHeight() int
+	SetHeight(int)
+	HandleKeyPress(termbox.Event) bool
+	Draw()
+}
+
 // TextAlignment is an int value for how we're aligning text
 type TextAlignment int
 

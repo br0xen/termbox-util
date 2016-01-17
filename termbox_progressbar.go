@@ -36,27 +36,24 @@ func (i *ProgressBar) GetProgress() int {
 }
 
 // SetProgress sets the current progress of the bar
-func (i *ProgressBar) SetProgress(p int) *ProgressBar {
+func (i *ProgressBar) SetProgress(p int) {
 	if (p <= i.total || i.allowOverflow) || (p >= 0 || i.allowUnderflow) {
 		i.progress = p
 	}
-	return i
 }
 
 // IncrProgress increments the current progress of the bar
-func (i *ProgressBar) IncrProgress() *ProgressBar {
+func (i *ProgressBar) IncrProgress() {
 	if i.progress < i.total || i.allowOverflow {
 		i.progress++
 	}
-	return i
 }
 
 // DecrProgress decrements the current progress of the bar
-func (i *ProgressBar) DecrProgress() *ProgressBar {
+func (i *ProgressBar) DecrProgress() {
 	if i.progress > 0 || i.allowUnderflow {
 		i.progress--
 	}
-	return i
 }
 
 // GetPercent returns the percent full of the bar
@@ -65,27 +62,23 @@ func (i *ProgressBar) GetPercent() int {
 }
 
 // EnableOverflow Tells the progress bar that it can go over the total
-func (i *ProgressBar) EnableOverflow() *ProgressBar {
+func (i *ProgressBar) EnableOverflow() {
 	i.allowOverflow = true
-	return i
 }
 
 // DisableOverflow Tells the progress bar that it can NOT go over the total
-func (i *ProgressBar) DisableOverflow() *ProgressBar {
+func (i *ProgressBar) DisableOverflow() {
 	i.allowOverflow = false
-	return i
 }
 
 // EnableUnderflow Tells the progress bar that it can go below zero
-func (i *ProgressBar) EnableUnderflow() *ProgressBar {
+func (i *ProgressBar) EnableUnderflow() {
 	i.allowUnderflow = true
-	return i
 }
 
 // DisableUnderflow Tells the progress bar that it can NOT go below zero
-func (i *ProgressBar) DisableUnderflow() *ProgressBar {
+func (i *ProgressBar) DisableUnderflow() {
 	i.allowUnderflow = false
-	return i
 }
 
 // GetFullChar returns the rune used for 'full'
@@ -94,9 +87,8 @@ func (i *ProgressBar) GetFullChar() rune {
 }
 
 // SetFullChar sets the rune used for 'full'
-func (i *ProgressBar) SetFullChar(f rune) *ProgressBar {
+func (i *ProgressBar) SetFullChar(f rune) {
 	i.fullChar = f
-	return i
 }
 
 // GetEmptyChar gets the rune used for 'empty'
@@ -105,27 +97,24 @@ func (i *ProgressBar) GetEmptyChar() rune {
 }
 
 // SetEmptyChar sets the rune used for 'empty'
-func (i *ProgressBar) SetEmptyChar(f rune) *ProgressBar {
+func (i *ProgressBar) SetEmptyChar(f rune) {
 	i.emptyChar = f
-	return i
 }
 
 // GetX Return the x position of the Progress Bar
 func (i *ProgressBar) GetX() int { return i.x }
 
 // SetX set the x position of the ProgressBar to x
-func (i *ProgressBar) SetX(x int) *ProgressBar {
+func (i *ProgressBar) SetX(x int) {
 	i.x = x
-	return i
 }
 
 // GetY Return the y position of the ProgressBar
 func (i *ProgressBar) GetY() int { return i.y }
 
 // SetY Set the y position of the ProgressBar to y
-func (i *ProgressBar) SetY(y int) *ProgressBar {
+func (i *ProgressBar) SetY(y int) {
 	i.y = y
-	return i
 }
 
 // GetHeight returns the height of the progress bar
@@ -135,9 +124,8 @@ func (i *ProgressBar) GetHeight() int {
 }
 
 // SetHeight Sets the height of the progress bar
-func (i *ProgressBar) SetHeight(h int) *ProgressBar {
+func (i *ProgressBar) SetHeight(h int) {
 	i.height = h
-	return i
 }
 
 // GetWidth returns the width of the progress bar
@@ -146,33 +134,29 @@ func (i *ProgressBar) GetWidth() int {
 }
 
 // SetWidth Sets the width of the progress bar
-func (i *ProgressBar) SetWidth(w int) *ProgressBar {
+func (i *ProgressBar) SetWidth(w int) {
 	i.width = w
-	return i
 }
 
 // GetBackground Return the current background color of the modal
 func (i *ProgressBar) GetBackground() termbox.Attribute { return i.bg }
 
 // SetBackground Set the current background color to bg
-func (i *ProgressBar) SetBackground(bg termbox.Attribute) *ProgressBar {
+func (i *ProgressBar) SetBackground(bg termbox.Attribute) {
 	i.bg = bg
-	return i
 }
 
 // GetForeground Return the current foreground color
 func (i *ProgressBar) GetForeground() termbox.Attribute { return i.fg }
 
 // SetForeground Set the foreground color to fg
-func (i *ProgressBar) SetForeground(fg termbox.Attribute) *ProgressBar {
+func (i *ProgressBar) SetForeground(fg termbox.Attribute) {
 	i.fg = fg
-	return i
 }
 
 // Align Tells which direction the progress bar empties
-func (i *ProgressBar) Align(a TextAlignment) *ProgressBar {
+func (i *ProgressBar) Align(a TextAlignment) {
 	i.alignment = a
-	return i
 }
 
 // SetColorized sets whether the progress bar should be colored
@@ -180,9 +164,8 @@ func (i *ProgressBar) Align(a TextAlignment) *ProgressBar {
 //  10% - Red
 //	50% - Yellow
 //	80% - Green
-func (i *ProgressBar) SetColorized(c bool) *ProgressBar {
+func (i *ProgressBar) SetColorized(c bool) {
 	i.colorized = c
-	return i
 }
 
 // HandleKeyPress accepts the termbox event and returns whether it was consumed

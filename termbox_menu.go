@@ -39,9 +39,8 @@ func CreateMenu(title string, options []string, x, y, width, height int, fg, bg 
 func (i *Menu) GetTitle() string { return i.title }
 
 // SetTitle sets the current title of the menu to s
-func (i *Menu) SetTitle(s string) *Menu {
+func (i *Menu) SetTitle(s string) {
 	i.title = s
-	return i
 }
 
 // GetOptions returns the current options of the menu
@@ -50,54 +49,49 @@ func (i *Menu) GetOptions() []MenuOption {
 }
 
 // SetOptions set the menu's options to opts
-func (i *Menu) SetOptions(opts []MenuOption) *Menu {
+func (i *Menu) SetOptions(opts []MenuOption) {
 	i.options = opts
-	return i
 }
 
 // SetOptionsFromStrings sets the options of this menu from a slice of strings
-func (i *Menu) SetOptionsFromStrings(opts []string) *Menu {
+func (i *Menu) SetOptionsFromStrings(opts []string) {
 	var newOpts []MenuOption
 	for _, v := range opts {
 		newOpts = append(newOpts, *CreateOptionFromText(v))
 	}
-	return i.SetOptions(newOpts)
+	i.SetOptions(newOpts)
 }
 
 // GetX returns the current x coordinate of the menu
 func (i *Menu) GetX() int { return i.x }
 
 // SetX sets the current x coordinate of the menu to x
-func (i *Menu) SetX(x int) *Menu {
+func (i *Menu) SetX(x int) {
 	i.x = x
-	return i
 }
 
 // GetY returns the current y coordinate of the menu
 func (i *Menu) GetY() int { return i.y }
 
 // SetY sets the current y coordinate of the menu to y
-func (i *Menu) SetY(y int) *Menu {
+func (i *Menu) SetY(y int) {
 	i.y = y
-	return i
 }
 
 // GetWidth returns the current width of the menu
 func (i *Menu) GetWidth() int { return i.width }
 
 // SetWidth sets the current menu width to width
-func (i *Menu) SetWidth(width int) *Menu {
+func (i *Menu) SetWidth(width int) {
 	i.width = width
-	return i
 }
 
 // GetHeight returns the current height of the menu
 func (i *Menu) GetHeight() int { return i.height }
 
 // SetHeight set the height of the menu to height
-func (i *Menu) SetHeight(height int) *Menu {
+func (i *Menu) SetHeight(height int) {
 	i.height = height
-	return i
 }
 
 // GetSelectedOption returns the current selected option
@@ -140,7 +134,7 @@ func (i *Menu) GetSelectedIndex() int {
 }
 
 // SetSelectedOption sets the current selected option to v (if it's valid)
-func (i *Menu) SetSelectedOption(v *MenuOption) *Menu {
+func (i *Menu) SetSelectedOption(v *MenuOption) {
 	for idx := range i.options {
 		if &i.options[idx] == v {
 			i.options[idx].Select()
@@ -148,35 +142,30 @@ func (i *Menu) SetSelectedOption(v *MenuOption) *Menu {
 			i.options[idx].Unselect()
 		}
 	}
-	return i
 }
 
 // SelectPrevOption Decrements the selected option (if it can)
-func (i *Menu) SelectPrevOption() *Menu {
+func (i *Menu) SelectPrevOption() {
 	idx := i.GetSelectedIndex()
 	for idx >= 0 {
 		idx--
 		testOption := i.GetOptionFromIndex(idx)
 		if testOption != nil && !testOption.IsDisabled() {
 			i.SetSelectedOption(testOption)
-			return i
 		}
 	}
-	return i
 }
 
 // SelectNextOption Increments the selected option (if it can)
-func (i *Menu) SelectNextOption() *Menu {
+func (i *Menu) SelectNextOption() {
 	idx := i.GetSelectedIndex()
 	for idx < len(i.options) {
 		idx++
 		testOption := i.GetOptionFromIndex(idx)
 		if testOption != nil && !testOption.IsDisabled() {
 			i.SetSelectedOption(testOption)
-			return i
 		}
 	}
-	return i
 }
 
 // SetOptionDisabled Disables the specified option
@@ -197,57 +186,50 @@ func (i *Menu) SetOptionEnabled(idx int) {
 func (i *Menu) HelpIsShown() bool { return i.showHelp }
 
 // ShowHelp sets whether or not to display the help text
-func (i *Menu) ShowHelp(b bool) *Menu {
+func (i *Menu) ShowHelp(b bool) {
 	i.showHelp = b
-	return i
 }
 
 // GetBackground returns the current background color
 func (i *Menu) GetBackground() termbox.Attribute { return i.bg }
 
 // SetBackground sets the background color to bg
-func (i *Menu) SetBackground(bg termbox.Attribute) *Menu {
+func (i *Menu) SetBackground(bg termbox.Attribute) {
 	i.bg = bg
-	return i
 }
 
 // GetForeground returns the current foreground color
 func (i *Menu) GetForeground() termbox.Attribute { return i.fg }
 
 // SetForeground sets the current foreground color to fg
-func (i *Menu) SetForeground(fg termbox.Attribute) *Menu {
+func (i *Menu) SetForeground(fg termbox.Attribute) {
 	i.fg = fg
-	return i
 }
 
 // IsDone returns whether the user has answered the modal
 func (i *Menu) IsDone() bool { return i.isDone }
 
 // SetDone sets whether the modal has completed it's purpose
-func (i *Menu) SetDone(b bool) *Menu {
+func (i *Menu) SetDone(b bool) {
 	i.isDone = b
-	return i
 }
 
 // IsBordered returns true or false if this menu has a border
 func (i *Menu) IsBordered() bool { return i.bordered }
 
 // SetBordered sets whether we render a border around the menu
-func (i *Menu) SetBordered(b bool) *Menu {
+func (i *Menu) SetBordered(b bool) {
 	i.bordered = b
-	return i
 }
 
 // EnableVimMode Enables h,j,k,l navigation
-func (i *Menu) EnableVimMode() *Menu {
+func (i *Menu) EnableVimMode() {
 	i.vimMode = true
-	return i
 }
 
 // DisableVimMode Disables h,j,k,l navigation
-func (i *Menu) DisableVimMode() *Menu {
+func (i *Menu) DisableVimMode() {
 	i.vimMode = false
-	return i
 }
 
 // HandleKeyPress handles the termbox event and returns whether it was consumed
@@ -348,24 +330,21 @@ func CreateOptionFromText(s string) *MenuOption {
 }
 
 // SetText Sets the text for this option
-func (i *MenuOption) SetText(s string) *MenuOption {
+func (i *MenuOption) SetText(s string) {
 	i.text = s
-	return i
 }
 
 // GetText Returns the text for this option
 func (i *MenuOption) GetText() string { return i.text }
 
 // Disable Sets this option to disabled
-func (i *MenuOption) Disable() *MenuOption {
+func (i *MenuOption) Disable() {
 	i.disabled = true
-	return i
 }
 
 // Enable Sets this option to enabled
-func (i *MenuOption) Enable() *MenuOption {
+func (i *MenuOption) Enable() {
 	i.disabled = false
-	return i
 }
 
 // IsDisabled returns whether this option is enabled
@@ -379,21 +358,18 @@ func (i *MenuOption) IsSelected() bool {
 }
 
 // Select Sets this option to selected
-func (i *MenuOption) Select() *MenuOption {
+func (i *MenuOption) Select() {
 	i.selected = true
-	return i
 }
 
 // Unselect Sets this option to not selected
-func (i *MenuOption) Unselect() *MenuOption {
+func (i *MenuOption) Unselect() {
 	i.selected = false
-	return i
 }
 
 // SetHelpText Sets this option's help text to s
-func (i *MenuOption) SetHelpText(s string) *MenuOption {
+func (i *MenuOption) SetHelpText(s string) {
 	i.helpText = s
-	return i
 }
 
 // GetHelpText Returns the help text for this option
