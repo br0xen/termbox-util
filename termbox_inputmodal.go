@@ -30,99 +30,87 @@ func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attr
 func (i *InputModal) GetTitle() string { return i.title }
 
 // SetTitle Sets the title of the modal to s
-func (i *InputModal) SetTitle(s string) *InputModal {
+func (i *InputModal) SetTitle(s string) {
 	i.title = s
-	return i
 }
 
 // GetText Return the text of the modal
 func (i *InputModal) GetText() string { return i.text }
 
 // SetText Set the text of the modal to s
-func (i *InputModal) SetText(s string) *InputModal {
+func (i *InputModal) SetText(s string) {
 	i.text = s
-	return i
 }
 
 // GetX Return the x position of the modal
 func (i *InputModal) GetX() int { return i.x }
 
 // SetX set the x position of the modal to x
-func (i *InputModal) SetX(x int) *InputModal {
+func (i *InputModal) SetX(x int) {
 	i.x = x
-	return i
 }
 
 // GetY Return the y position of the modal
 func (i *InputModal) GetY() int { return i.y }
 
 // SetY Set the y position of the modal to y
-func (i *InputModal) SetY(y int) *InputModal {
+func (i *InputModal) SetY(y int) {
 	i.y = y
-	return i
 }
 
 // GetWidth Return the width of the modal
 func (i *InputModal) GetWidth() int { return i.width }
 
 // SetWidth Set the width of the modal to width
-func (i *InputModal) SetWidth(width int) *InputModal {
+func (i *InputModal) SetWidth(width int) {
 	i.width = width
-	return i
 }
 
 // GetHeight Return the height of the modal
 func (i *InputModal) GetHeight() int { return i.height }
 
 // SetHeight Set the height of the modal to height
-func (i *InputModal) SetHeight(height int) *InputModal {
+func (i *InputModal) SetHeight(height int) {
 	i.height = height
-	return i
 }
 
 // HelpIsShown Returns whether the modal is showing it's help text or not
 func (i *InputModal) HelpIsShown() bool { return i.showHelp }
 
 // ShowHelp Set the "Show Help" flag
-func (i *InputModal) ShowHelp(b bool) *InputModal {
+func (i *InputModal) ShowHelp(b bool) {
 	i.showHelp = b
-	return i
 }
 
 // GetBackground Return the current background color of the modal
 func (i *InputModal) GetBackground() termbox.Attribute { return i.bg }
 
 // SetBackground Set the current background color to bg
-func (i *InputModal) SetBackground(bg termbox.Attribute) *InputModal {
+func (i *InputModal) SetBackground(bg termbox.Attribute) {
 	i.bg = bg
-	return i
 }
 
 // GetForeground Return the current foreground color
 func (i *InputModal) GetForeground() termbox.Attribute { return i.fg }
 
 // SetForeground Set the foreground color to fg
-func (i *InputModal) SetForeground(fg termbox.Attribute) *InputModal {
+func (i *InputModal) SetForeground(fg termbox.Attribute) {
 	i.fg = fg
-	return i
 }
 
 // Show Sets the visibility flag to true
-func (i *InputModal) Show() *InputModal {
+func (i *InputModal) Show() {
 	i.isVisible = true
-	return i
 }
 
 // Hide Sets the visibility flag to false
-func (i *InputModal) Hide() *InputModal {
+func (i *InputModal) Hide() {
 	i.isVisible = false
-	return i
 }
 
 // SetDone Sets the flag that tells whether this modal has completed it's purpose
-func (i *InputModal) SetDone(b bool) *InputModal {
+func (i *InputModal) SetDone(b bool) {
 	i.isDone = b
-	return i
 }
 
 // IsDone Returns the "isDone" flag
@@ -134,19 +122,22 @@ func (i *InputModal) IsDone() bool {
 func (i *InputModal) GetValue() string { return i.input.GetValue() }
 
 // SetValue Sets the value of the input to s
-func (i *InputModal) SetValue(s string) *InputModal {
+func (i *InputModal) SetValue(s string) {
 	i.input.SetValue(s)
-	return i
+}
+
+// SetInputWrap sets whether the input field will wrap long text or not
+func (i *InputModal) SetInputWrap(b bool) {
+	i.input.SetWrap(b)
 }
 
 // Clear Resets all non-positional parameters of the modal
-func (i *InputModal) Clear() *InputModal {
+func (i *InputModal) Clear() {
 	i.title = ""
 	i.text = ""
 	i.input.SetValue("")
 	i.isDone = false
 	i.isVisible = false
-	return i
 }
 
 // HandleKeyPress Handle the termbox event, return true if it was consumed

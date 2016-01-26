@@ -7,6 +7,19 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
+type termboxControl interface {
+	GetX() int
+	SetX(int)
+	GetY() int
+	SetY(int)
+	GetWidth() int
+	SetWidth(int)
+	GetHeight() int
+	SetHeight(int)
+	HandleKeyPress(termbox.Event) bool
+	Draw()
+}
+
 // TextAlignment is an int value for how we're aligning text
 type TextAlignment int
 
@@ -18,6 +31,49 @@ const (
 	// AlignRight Aligns text to the right
 	AlignRight
 )
+
+/* Basic Input Helpers */
+
+// KeyIsAlphaNumeric Returns whether the termbox event is an
+// Alpha-Numeric Key Press
+func KeyIsAlphaNumeric(event termbox.Event) bool {
+	return KeyIsAlpha(event) || KeyIsNumeric(event)
+}
+
+// KeyIsAlpha Returns whether the termbox event is a
+// alphabetic Key press
+func KeyIsAlpha(event termbox.Event) bool {
+	k := event.Ch
+	if (k >= 'a' && k <= 'z') || (k >= 'A' && k <= 'Z') {
+		return true
+	}
+	return false
+}
+
+// KeyIsNumeric Returns whether the termbox event is a
+// numeric Key press
+func KeyIsNumeric(event termbox.Event) bool {
+	k := event.Ch
+	if k >= '0' && k <= '9' {
+		return true
+	}
+	return false
+}
+
+// KeyIsSymbol Returns whether the termbox event is a
+// symbol Key press
+func KeyIsSymbol(event termbox.Event) bool {
+	symbols := []rune{'!', '@', '#', '$', '%', '^', '&', '*',
+		'(', ')', '-', '_', '=', '+', '[', ']', '{', '}', '|',
+		';', ':', '"', '\'', ',', '<', '.', '>', '/', '?', '`', '~'}
+	k := event.Ch
+	for i := range symbols {
+		if k == symbols[i] {
+			return true
+		}
+	}
+	return false
+}
 
 /* Basic Output Helpers */
 

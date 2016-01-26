@@ -1,6 +1,8 @@
 package termboxUtil
 
 import (
+	"strings"
+
 	"github.com/nsf/termbox-go"
 )
 
@@ -21,18 +23,16 @@ func CreateASCIIArt(c []string, x, y int, fg, bg termbox.Attribute) *ASCIIArt {
 func (i *ASCIIArt) GetX() int { return i.x }
 
 // SetX set the x position of the modal to x
-func (i *ASCIIArt) SetX(x int) *ASCIIArt {
+func (i *ASCIIArt) SetX(x int) {
 	i.x = x
-	return i
 }
 
 // GetY Return the y position of the modal
 func (i *ASCIIArt) GetY() int { return i.y }
 
 // SetY Set the y position of the modal to y
-func (i *ASCIIArt) SetY(y int) *ASCIIArt {
+func (i *ASCIIArt) SetY(y int) {
 	i.y = y
-	return i
 }
 
 // GetHeight Returns the number of strings in the contents slice
@@ -40,10 +40,45 @@ func (i *ASCIIArt) GetHeight() int {
 	return len(i.contents)
 }
 
+// SetHeight truncates lines from the bottom of the ascii art
+func (i *ASCIIArt) SetHeight(h int) {
+	if len(i.contents) > h {
+		i.contents = i.contents[:h]
+	} else {
+		for j := len(i.contents); j < h; j++ {
+			i.contents = append(i.contents, "")
+		}
+	}
+}
+
+// GetWidth Returns the number of strings in the contents slice
+func (i *ASCIIArt) GetWidth() int {
+	// Find the longest line
+	var ret int
+	for j := range i.contents {
+		if len(i.contents[j]) > ret {
+			ret = len(i.contents[j])
+		}
+	}
+	return ret
+}
+
+// SetWidth Sets all lines in the contents to width w
+func (i *ASCIIArt) SetWidth(w int) {
+	// Find the longest line
+	for j := range i.contents {
+		mkUp := w - len(i.contents[j])
+		if mkUp > 0 {
+			i.contents[j] = i.contents[j] + strings.Repeat(" ", mkUp)
+		} else {
+			i.contents[j] = i.contents[j][:w]
+		}
+	}
+}
+
 // SetContents Sets the contents of i to c
-func (i *ASCIIArt) SetContents(c []string) *ASCIIArt {
+func (i *ASCIIArt) SetContents(c []string) {
 	i.contents = c
-	return i
 }
 
 // GetContents returns the ascii art
@@ -52,33 +87,30 @@ func (i *ASCIIArt) GetContents() []string {
 }
 
 // SetContentLine Sets a specific line of the contents to s
-func (i *ASCIIArt) SetContentLine(s string, idx int) *ASCIIArt {
+func (i *ASCIIArt) SetContentLine(s string, idx int) {
 	if idx >= 0 && idx < len(i.contents) {
 		i.contents[idx] = s
 	}
-	return i
 }
 
 // GetBackground Return the current background color of the modal
 func (i *ASCIIArt) GetBackground() termbox.Attribute { return i.bg }
 
 // SetBackground Set the current background color to bg
-func (i *ASCIIArt) SetBackground(bg termbox.Attribute) *ASCIIArt {
+func (i *ASCIIArt) SetBackground(bg termbox.Attribute) {
 	i.bg = bg
-	return i
 }
 
 // GetForeground Return the current foreground color
 func (i *ASCIIArt) GetForeground() termbox.Attribute { return i.fg }
 
 // SetForeground Set the foreground color to fg
-func (i *ASCIIArt) SetForeground(fg termbox.Attribute) *ASCIIArt {
+func (i *ASCIIArt) SetForeground(fg termbox.Attribute) {
 	i.fg = fg
-	return i
 }
 
 // Align Align the Ascii art over width width with alignment a
-func (i *ASCIIArt) Align(a TextAlignment, width int) *ASCIIArt {
+func (i *ASCIIArt) Align(a TextAlignment, width int) {
 	// First get the width of the longest string in the slice
 	var newContents []string
 	incomingLength := 0
@@ -91,7 +123,6 @@ func (i *ASCIIArt) Align(a TextAlignment, width int) *ASCIIArt {
 		newContents = append(newContents, AlignText(AlignText(line, incomingLength, AlignLeft), width, a))
 	}
 	i.contents = newContents
-	return i
 }
 
 // HandleKeyPress accepts the termbox event and returns whether it was consumed

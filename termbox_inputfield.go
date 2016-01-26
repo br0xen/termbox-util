@@ -1,10 +1,6 @@
 package termboxUtil
 
-import (
-	"fmt"
-
-	"github.com/nsf/termbox-go"
-)
+import "github.com/nsf/termbox-go"
 
 // InputField is a field for inputting text
 type InputField struct {
@@ -13,6 +9,8 @@ type InputField struct {
 	cursor              int
 	fg, bg              termbox.Attribute
 	bordered            bool
+	wrap                bool
+	multiline           bool
 }
 
 // CreateInputField creates an input field at x, y that is w by h
@@ -25,61 +23,69 @@ func CreateInputField(x, y, w, h int, fg, bg termbox.Attribute) *InputField {
 func (i *InputField) GetValue() string { return i.value }
 
 // SetValue sets the current text in the InputField to s
-func (i *InputField) SetValue(s string) *InputField {
+func (i *InputField) SetValue(s string) {
 	i.value = s
-	return i
 }
 
 // GetX returns the x position of the input field
 func (i *InputField) GetX() int { return i.x }
 
 // SetX sets the x position of the input field
-func (i *InputField) SetX(x int) *InputField {
+func (i *InputField) SetX(x int) {
 	i.x = x
-	return i
 }
 
 // GetY returns the y position of the input field
 func (i *InputField) GetY() int { return i.y }
 
 // SetY sets the y position of the input field
-func (i *InputField) SetY(y int) *InputField {
+func (i *InputField) SetY(y int) {
 	i.y = y
-	return i
 }
 
 // GetWidth returns the current width of the input field
 func (i *InputField) GetWidth() int { return i.width }
 
 // SetWidth sets the current width of the input field
-func (i *InputField) SetWidth(w int) *InputField {
+func (i *InputField) SetWidth(w int) {
 	i.width = w
-	return i
 }
 
 // GetHeight returns the current height of the input field
 func (i *InputField) GetHeight() int { return i.height }
 
 // SetHeight sets the current height of the input field
-func (i *InputField) SetHeight(h int) *InputField {
+func (i *InputField) SetHeight(h int) {
 	i.height = h
-	return i
 }
 
 // IsBordered returns true or false if this input field has a border
 func (i *InputField) IsBordered() bool { return i.bordered }
 
 // SetBordered sets whether we render a border around the input field
-func (i *InputField) SetBordered(b bool) *InputField {
+func (i *InputField) SetBordered(b bool) {
 	i.bordered = b
-	return i
+}
+
+// DoesWrap returns true or false if this input field wraps text
+func (i *InputField) DoesWrap() bool { return i.wrap }
+
+// SetWrap sets whether we wrap the text at width.
+func (i *InputField) SetWrap(b bool) {
+	i.wrap = b
+}
+
+// IsMultiline returns true or false if this field can have multiple lines
+func (i *InputField) IsMultiline() bool { return i.multiline }
+
+// SetMultiline sets whether the field can have multiple lines
+func (i *InputField) SetMultiline(b bool) {
+	i.multiline = b
 }
 
 // HandleKeyPress accepts the termbox event and returns whether it was consumed
 func (i *InputField) HandleKeyPress(event termbox.Event) bool {
-	if event.Key == termbox.KeyEnter {
-		// Done editing
-	} else if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
 		if len(i.value) > 0 {
 			i.value = i.value[:len(i.value)-1]
 		}
@@ -92,8 +98,8 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 			i.cursor++
 		}
 	} else if event.Key == termbox.KeyCtrlU {
-		// Ctrl+U Clears the Input
-		i.value = ""
+		// Ctrl+U Clears the Input (before the cursor)
+		i.value = i.value[i.cursor:]
 	} else {
 		// Get the rune to add to our value. Space and Tab are special cases where
 		// we can't use the event's rune directly
@@ -103,18 +109,26 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 			ch = " "
 		case termbox.KeyTab:
 			ch = "\t"
+			/* Multiline is disabled right now
+			case termbox.KeyEnter:
+				if i.multiline {
+					ch = "\n"
+				}
+			*/
 		default:
-			ch = string(event.Ch)
+			if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
+				ch = string(event.Ch)
+			}
 		}
 
 		if i.cursor+len(i.value) == 0 {
-			i.value = fmt.Sprintf("%s%s", ch, i.value)
+			i.value = string(ch) + i.value
 		} else if i.cursor == 0 {
-			i.value = fmt.Sprintf("%s%s", i.value, ch)
+			i.value = i.value + string(ch)
 		} else {
 			strPt1 := i.value[:(len(i.value) + i.cursor)]
 			strPt2 := i.value[(len(i.value) + i.cursor):]
-			i.value = fmt.Sprintf("%s%s%s", strPt1, ch, strPt2)
+			i.value = strPt1 + string(ch) + strPt2
 		}
 	}
 	return true
@@ -122,8 +136,19 @@ func (i *InputField) HandleKeyPress(event termbox.Event) bool {
 
 // Draw outputs the input field on the screen
 func (i *InputField) Draw() {
+	maxWidth := i.width
+	maxHeight := i.height
+	x, y := i.x, i.y
+	startX := i.x
+	startY := i.y
 	if i.bordered {
 		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+		maxWidth--
+		maxHeight--
+		x++
+		y++
+		startX++
+		startY++
 	}
 
 	var strPt1, strPt2 string
@@ -145,7 +170,56 @@ func (i *InputField) Draw() {
 	} else {
 		strPt1, strPt2, cursorRune = "", "", ' '
 	}
-	x, y := DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-	termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-	DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
+	// Original:
+	/*
+		x, y = DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
+		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
+	*/
+	if i.wrap {
+		// Split the text into maxWidth chunks
+		for len(strPt1) > maxWidth {
+			breakAt := maxWidth
+			DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
+			x = startX
+			y++
+			strPt1 = strPt1[breakAt:]
+		}
+		x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
+		if x >= maxWidth {
+			y++
+			x = startX
+		}
+		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		x++
+		if len(strPt2) > 0 {
+			lenLeft := maxWidth - len(strPt1) - 1
+			if lenLeft > 0 && len(strPt2) > lenLeft {
+				DrawStringAtPoint(strPt2[:lenLeft], x+1, y, i.fg, i.bg)
+				strPt2 = strPt2[lenLeft:]
+			}
+			for len(strPt2) > maxWidth {
+				breakAt := maxWidth
+				DrawStringAtPoint(strPt2[:breakAt], x, y, i.fg, i.bg)
+				x = startX
+				y++
+				strPt2 = strPt2[breakAt:]
+			}
+			x, y = DrawStringAtPoint(strPt2, x, y, i.fg, i.bg)
+		}
+	} else {
+		for len(strPt1)+len(strPt2)+1 > maxWidth {
+			if len(strPt1) >= len(strPt2) {
+				if len(strPt1) == 0 {
+					break
+				}
+				strPt1 = strPt1[1:]
+			} else {
+				strPt2 = strPt2[:len(strPt2)-1]
+			}
+		}
+		x, y = DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
+		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
+	}
 }
