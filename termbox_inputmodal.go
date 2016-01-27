@@ -23,6 +23,7 @@ func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attr
 	i.input = CreateInputField(i.x+1, i.y+3, i.width-2, 2, i.fg, i.bg)
 	i.showHelp = true
 	i.input.bordered = true
+	i.isVisible = true
 	return &i
 }
 
