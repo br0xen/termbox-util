@@ -60,6 +60,7 @@ func (i *Menu) SetOptionsFromStrings(opts []string) {
 		newOpts = append(newOpts, *CreateOptionFromText(v))
 	}
 	i.SetOptions(newOpts)
+	i.SetSelectedOption(i.GetOptionFromIndex(0))
 }
 
 // GetX returns the current x coordinate of the menu
@@ -152,6 +153,7 @@ func (i *Menu) SelectPrevOption() {
 		testOption := i.GetOptionFromIndex(idx)
 		if testOption != nil && !testOption.IsDisabled() {
 			i.SetSelectedOption(testOption)
+			return
 		}
 	}
 }
@@ -164,6 +166,7 @@ func (i *Menu) SelectNextOption() {
 		testOption := i.GetOptionFromIndex(idx)
 		if testOption != nil && !testOption.IsDisabled() {
 			i.SetSelectedOption(testOption)
+			return
 		}
 	}
 }
@@ -292,23 +295,34 @@ func (i *Menu) Draw() {
 		}
 	}
 
-	// If the currently selected option is disabled, move to the next
-	if i.GetSelectedOption().IsDisabled() {
-		i.SelectNextOption()
-	}
-
-	// Print the options
 	if len(i.options) > 0 {
+		// If the currently selected option is disabled, move to the next
+		if i.GetSelectedOption().IsDisabled() {
+			i.SelectNextOption()
+		}
+
+		// Print the options
 		for idx := range i.options {
+			if i.GetSelectedIndex()-idx >= optionHeight-1 {
+				// Skip this one
+				continue
+			}
 			currOpt := &i.options[idx]
+			outTxt := currOpt.GetText()
+			if len(outTxt) >= i.width {
+				outTxt = outTxt[:i.width]
+			}
 			if currOpt.IsDisabled() {
-				DrawStringAtPoint(currOpt.GetText(), optionStartX, optionStartY, i.disabledFg, i.disabledBg)
+				DrawStringAtPoint(outTxt, optionStartX, optionStartY, i.disabledFg, i.disabledBg)
 			} else if i.GetSelectedOption() == currOpt {
-				DrawStringAtPoint(AlignText(currOpt.GetText(), optionWidth, AlignLeft), optionStartX, optionStartY, i.selectedFg, i.selectedBg)
+				DrawStringAtPoint(AlignText(outTxt, optionWidth, AlignLeft), optionStartX, optionStartY, i.selectedFg, i.selectedBg)
 			} else {
-				DrawStringAtPoint(currOpt.GetText(), optionStartX, optionStartY, i.fg, i.bg)
+				DrawStringAtPoint(outTxt, optionStartX, optionStartY, i.fg, i.bg)
 			}
 			optionStartY++
+			if optionStartY > i.y+optionHeight-1 {
+				break
+			}
 		}
 	}
 }
