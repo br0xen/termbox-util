@@ -6,6 +6,7 @@ import (
 
 // InputModal A modal for text input
 type InputModal struct {
+	id                  string
 	title               string
 	text                string
 	input               *InputField
@@ -15,16 +16,35 @@ type InputModal struct {
 	bg, fg              termbox.Attribute
 	isDone              bool
 	isVisible           bool
+	bordered            bool
+	tabSkip             bool
+	active              bool
 }
 
 // CreateInputModal Create an input modal with the given attributes
 func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *InputModal {
-	i := InputModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg}
-	i.input = CreateInputField(i.x+1, i.y+3, i.width-2, 2, i.fg, i.bg)
+	i := InputModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg, bordered: true}
+	i.input = CreateInputField(i.x+2, i.y+3, i.width-2, 2, i.fg, i.bg)
 	i.showHelp = true
 	i.input.bordered = true
 	i.isVisible = true
 	return &i
+}
+
+// SetActiveFlag sets this control's active flag
+func (i *InputModal) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *InputModal) IsActive() bool { return i.active }
+
+// GetID returns this control's ID
+func (i *InputModal) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *InputModal) SetID(newID string) {
+	i.id = newID
 }
 
 // GetTitle Return the title of the modal
@@ -75,6 +95,26 @@ func (i *InputModal) SetHeight(height int) {
 	i.height = height
 }
 
+// IsBordered returns whether this control is bordered or not
+func (i *InputModal) IsBordered() bool {
+	return i.bordered
+}
+
+// SetBordered sets whether we render a border around the frame
+func (i *InputModal) SetBordered(b bool) {
+	i.bordered = b
+}
+
+// IsTabSkipped returns whether this control has it's tabskip flag set
+func (i *InputModal) IsTabSkipped() bool {
+	return i.tabSkip
+}
+
+// SetTabSkip sets the tabskip flag for this control
+func (i *InputModal) SetTabSkip(b bool) {
+	i.tabSkip = b
+}
+
 // HelpIsShown Returns whether the modal is showing it's help text or not
 func (i *InputModal) HelpIsShown() bool { return i.showHelp }
 
@@ -83,20 +123,20 @@ func (i *InputModal) ShowHelp(b bool) {
 	i.showHelp = b
 }
 
-// GetBackground Return the current background color of the modal
-func (i *InputModal) GetBackground() termbox.Attribute { return i.bg }
+// GetFgColor returns the foreground color
+func (i *InputModal) GetFgColor() termbox.Attribute { return i.fg }
 
-// SetBackground Set the current background color to bg
-func (i *InputModal) SetBackground(bg termbox.Attribute) {
-	i.bg = bg
+// SetFgColor sets the foreground color
+func (i *InputModal) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
 }
 
-// GetForeground Return the current foreground color
-func (i *InputModal) GetForeground() termbox.Attribute { return i.fg }
+// GetBgColor returns the background color
+func (i *InputModal) GetBgColor() termbox.Attribute { return i.bg }
 
-// SetForeground Set the foreground color to fg
-func (i *InputModal) SetForeground(fg termbox.Attribute) {
-	i.fg = fg
+// SetBgColor sets the current background color
+func (i *InputModal) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
 }
 
 // Show Sets the visibility flag to true
@@ -141,14 +181,17 @@ func (i *InputModal) Clear() {
 	i.isVisible = false
 }
 
-// HandleKeyPress Handle the termbox event, return true if it was consumed
-func (i *InputModal) HandleKeyPress(event termbox.Event) bool {
-	if event.Key == termbox.KeyEnter {
-		// Done editing
-		i.isDone = true
-		return true
+// HandleEvent Handle the termbox event, return true if it was consumed
+func (i *InputModal) HandleEvent(event termbox.Event) bool {
+	if i.active {
+		if event.Key == termbox.KeyEnter {
+			// Done editing
+			i.isDone = true
+			return true
+		}
+		return i.input.HandleEvent(event)
 	}
-	return i.input.HandleKeyPress(event)
+	return false
 }
 
 // Draw Draw the modal
@@ -181,7 +224,9 @@ func (i *InputModal) Draw() {
 			helpX := (i.x + i.width - len(helpString)) - 1
 			DrawStringAtPoint(helpString, helpX, nextY, i.fg, i.bg)
 		}
-		// Now draw the border
-		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+		if i.bordered {
+			// Now draw the border
+			DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+		}
 	}
 }

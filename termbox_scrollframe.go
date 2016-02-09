@@ -5,12 +5,14 @@ import "github.com/nsf/termbox-go"
 // ScrollFrame is a frame for holding other elements
 // It manages it's own x/y, tab index
 type ScrollFrame struct {
+	id                  string
 	x, y, width, height int
 	scrollX, scrollY    int
 	tabIdx              int
 	fg, bg              termbox.Attribute
 	bordered            bool
 	controls            []termboxControl
+	active              bool
 }
 
 // CreateScrollFrame creates Scrolling Frame at x, y that is w by h
@@ -19,92 +21,124 @@ func CreateScrollFrame(x, y, w, h int, fg, bg termbox.Attribute) *ScrollFrame {
 	return &s
 }
 
+// SetActiveFlag sets this control's active flag
+func (i *ScrollFrame) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *ScrollFrame) IsActive() bool { return i.active }
+
+// GetID returns this control's ID
+func (i *ScrollFrame) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *ScrollFrame) SetID(newID string) {
+	i.id = newID
+}
+
 // GetX returns the x position of the scroll frame
-func (s *ScrollFrame) GetX() int { return s.x }
+func (i *ScrollFrame) GetX() int { return i.x }
 
 // SetX sets the x position of the scroll frame
-func (s *ScrollFrame) SetX(x int) {
-	s.x = x
+func (i *ScrollFrame) SetX(x int) {
+	i.x = x
 }
 
 // GetY returns the y position of the scroll frame
-func (s *ScrollFrame) GetY() int { return s.y }
+func (i *ScrollFrame) GetY() int { return i.y }
 
 // SetY sets the y position of the scroll frame
-func (s *ScrollFrame) SetY(y int) {
-	s.y = y
+func (i *ScrollFrame) SetY(y int) {
+	i.y = y
 }
 
 // GetWidth returns the current width of the scroll frame
-func (s *ScrollFrame) GetWidth() int { return s.width }
+func (i *ScrollFrame) GetWidth() int { return i.width }
 
 // SetWidth sets the current width of the scroll frame
-func (s *ScrollFrame) SetWidth(w int) {
-	s.width = w
+func (i *ScrollFrame) SetWidth(w int) {
+	i.width = w
 }
 
 // GetHeight returns the current height of the scroll frame
-func (s *ScrollFrame) GetHeight() int { return s.height }
+func (i *ScrollFrame) GetHeight() int { return i.height }
 
 // SetHeight sets the current height of the scroll frame
-func (s *ScrollFrame) SetHeight(h int) {
-	s.height = h
+func (i *ScrollFrame) SetHeight(h int) {
+	i.height = h
+}
+
+// GetFgColor returns the foreground color
+func (i *ScrollFrame) GetFgColor() termbox.Attribute { return i.fg }
+
+// SetFgColor sets the foreground color
+func (i *ScrollFrame) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
+}
+
+// GetBgColor returns the background color
+func (i *ScrollFrame) GetBgColor() termbox.Attribute { return i.bg }
+
+// SetBgColor sets the current background color
+func (i *ScrollFrame) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
 }
 
 // IsBordered returns true or false if this scroll frame has a border
-func (s *ScrollFrame) IsBordered() bool { return s.bordered }
+func (i *ScrollFrame) IsBordered() bool { return i.bordered }
 
 // SetBordered sets whether we render a border around the scroll frame
-func (s *ScrollFrame) SetBordered(b bool) {
-	s.bordered = b
+func (i *ScrollFrame) SetBordered(b bool) {
+	i.bordered = b
 }
 
 // GetScrollX returns the x distance scrolled
-func (s *ScrollFrame) GetScrollX() int {
-	return s.scrollX
+func (i *ScrollFrame) GetScrollX() int {
+	return i.scrollX
 }
 
 // GetScrollY returns the y distance scrolled
-func (s *ScrollFrame) GetScrollY() int {
-	return s.scrollY
+func (i *ScrollFrame) GetScrollY() int {
+	return i.scrollY
 }
 
 // ScrollDown scrolls the frame down
-func (s *ScrollFrame) ScrollDown() {
-	s.scrollY++
+func (i *ScrollFrame) ScrollDown() {
+	i.scrollY++
 }
 
 // ScrollUp scrolls the frame up
-func (s *ScrollFrame) ScrollUp() {
-	if s.scrollY > 0 {
-		s.scrollY--
+func (i *ScrollFrame) ScrollUp() {
+	if i.scrollY > 0 {
+		i.scrollY--
 	}
 }
 
 // ScrollLeft scrolls the frame left
-func (s *ScrollFrame) ScrollLeft() {
-	if s.scrollX > 0 {
-		s.scrollX--
+func (i *ScrollFrame) ScrollLeft() {
+	if i.scrollX > 0 {
+		i.scrollX--
 	}
 }
 
 // ScrollRight scrolls the frame right
-func (s *ScrollFrame) ScrollRight() {
-	s.scrollX++
+func (i *ScrollFrame) ScrollRight() {
+	i.scrollX++
 }
 
 // AddControl adds a control to the frame
-func (s *ScrollFrame) AddControl(t termboxControl) {
-	s.controls = append(s.controls, t)
+func (i *ScrollFrame) AddControl(t termboxControl) {
+	i.controls = append(i.controls, t)
 }
 
 // DrawControl figures out the relative position of the control,
 // sets it, draws it, then resets it.
-func (s *ScrollFrame) DrawControl(t termboxControl) {
-	if s.IsVisible(t) {
+func (i *ScrollFrame) DrawControl(t termboxControl) {
+	if i.IsVisible(t) {
 		ctlX, ctlY := t.GetX(), t.GetY()
-		t.SetX((s.GetX() + ctlX))
-		t.SetY((s.GetY() + ctlY))
+		t.SetX((i.GetX() + ctlX))
+		t.SetY((i.GetY() + ctlY))
 		t.Draw()
 		t.SetX(ctlX)
 		t.SetY(ctlY)
@@ -113,35 +147,35 @@ func (s *ScrollFrame) DrawControl(t termboxControl) {
 
 // IsVisible takes a Termbox Control and returns whether
 // that control would be visible in the frame
-func (s *ScrollFrame) IsVisible(t termboxControl) bool {
+func (i *ScrollFrame) IsVisible(t termboxControl) bool {
 	// Check if any part of t should be visible
 	cX, cY := t.GetX(), t.GetY()
-	if cX+t.GetWidth() >= s.scrollX && cX <= s.scrollX+s.width {
-		return cY+t.GetHeight() >= s.scrollY && cY <= s.scrollY+s.height
+	if cX+t.GetWidth() >= i.scrollX && cX <= i.scrollX+i.width {
+		return cY+t.GetHeight() >= i.scrollY && cY <= i.scrollY+i.height
 	}
 	return false
 }
 
-// HandleKeyPress accepts the termbox event and returns whether it was consumed
-func (s *ScrollFrame) HandleKeyPress(event termbox.Event) bool {
+// HandleEvent accepts the termbox event and returns whether it was consumed
+func (i *ScrollFrame) HandleEvent(event termbox.Event) bool {
 	return false
 }
 
 // DrawToStrings generates a slice of strings with what should
 // be drawn to the screen
-func (s *ScrollFrame) DrawToStrings() []string {
+func (i *ScrollFrame) DrawToStrings() []string {
 	return []string{}
 }
 
 // Draw outputs the Scoll Frame on the screen
-func (s *ScrollFrame) Draw() {
-	maxWidth := s.width
-	maxHeight := s.height
-	x, y := s.x, s.y
-	startX := s.x
-	startY := s.y
-	if s.bordered {
-		DrawBorder(s.x, s.y, s.x+s.width, s.y+s.height, s.fg, s.bg)
+func (i *ScrollFrame) Draw() {
+	maxWidth := i.width
+	maxHeight := i.height
+	x, y := i.x, i.y
+	startX := i.x
+	startY := i.y
+	if i.bordered {
+		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
 		maxWidth--
 		maxHeight--
 		x++
@@ -149,7 +183,7 @@ func (s *ScrollFrame) Draw() {
 		startX++
 		startY++
 	}
-	for i := range s.controls {
-		s.DrawControl(s.controls[i])
+	for idx := range i.controls {
+		i.DrawControl(i.controls[idx])
 	}
 }

@@ -1,9 +1,14 @@
 package termboxUtil
 
-import "github.com/nsf/termbox-go"
+import (
+	"strings"
+
+	"github.com/nsf/termbox-go"
+)
 
 // Menu is a menu with a list of options
 type Menu struct {
+	id      string
 	title   string
 	options []MenuOption
 	// If height is -1, then it is adaptive to the menu
@@ -16,6 +21,8 @@ type Menu struct {
 	isDone                 bool
 	bordered               bool
 	vimMode                bool
+	tabSkip                bool
+	active                 bool
 }
 
 // CreateMenu Creates a menu with the specified attributes
@@ -33,6 +40,14 @@ func CreateMenu(title string, options []string, x, y, width, height int, fg, bg 
 		i.SetSelectedOption(&i.options[0])
 	}
 	return &i
+}
+
+// GetID returns this control's ID
+func (i *Menu) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *Menu) SetID(newID string) {
+	i.id = newID
 }
 
 // GetTitle returns the current title of the menu
@@ -193,20 +208,20 @@ func (i *Menu) ShowHelp(b bool) {
 	i.showHelp = b
 }
 
-// GetBackground returns the current background color
-func (i *Menu) GetBackground() termbox.Attribute { return i.bg }
+// GetFgColor returns the foreground color
+func (i *Menu) GetFgColor() termbox.Attribute { return i.fg }
 
-// SetBackground sets the background color to bg
-func (i *Menu) SetBackground(bg termbox.Attribute) {
-	i.bg = bg
+// SetFgColor sets the foreground color
+func (i *Menu) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
 }
 
-// GetForeground returns the current foreground color
-func (i *Menu) GetForeground() termbox.Attribute { return i.fg }
+// GetBgColor returns the background color
+func (i *Menu) GetBgColor() termbox.Attribute { return i.bg }
 
-// SetForeground sets the current foreground color to fg
-func (i *Menu) SetForeground(fg termbox.Attribute) {
-	i.fg = fg
+// SetBgColor sets the current background color
+func (i *Menu) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
 }
 
 // IsDone returns whether the user has answered the modal
@@ -235,29 +250,39 @@ func (i *Menu) DisableVimMode() {
 	i.vimMode = false
 }
 
-// HandleKeyPress handles the termbox event and returns whether it was consumed
-func (i *Menu) HandleKeyPress(event termbox.Event) bool {
-	if event.Key == termbox.KeyEnter || event.Key == termbox.KeySpace {
-		i.isDone = true
-		return true
-	}
-	currentIdx := i.GetSelectedIndex()
-	switch event.Key {
-	case termbox.KeyArrowUp:
-		i.SelectPrevOption()
-	case termbox.KeyArrowDown:
-		i.SelectNextOption()
-	}
-	if i.vimMode {
-		switch event.Ch {
-		case 'j':
-			i.SelectNextOption()
-		case 'k':
-			i.SelectPrevOption()
+// SetActiveFlag sets this control's active flag
+func (i *Menu) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *Menu) IsActive() bool { return i.active }
+
+// HandleEvent handles the termbox event and returns whether it was consumed
+func (i *Menu) HandleEvent(event termbox.Event) bool {
+	if i.active {
+		if event.Key == termbox.KeyEnter || event.Key == termbox.KeySpace {
+			i.isDone = true
+			return true
 		}
-	}
-	if i.GetSelectedIndex() != currentIdx {
-		return true
+		currentIdx := i.GetSelectedIndex()
+		switch event.Key {
+		case termbox.KeyArrowUp:
+			i.SelectPrevOption()
+		case termbox.KeyArrowDown:
+			i.SelectNextOption()
+		}
+		if i.vimMode {
+			switch event.Ch {
+			case 'j':
+				i.SelectNextOption()
+			case 'k':
+				i.SelectPrevOption()
+			}
+		}
+		if i.GetSelectedIndex() != currentIdx {
+			return true
+		}
 	}
 	return false
 }
@@ -325,16 +350,55 @@ func (i *Menu) Draw() {
 			}
 		}
 	}
+	i.DrawOptions(optionStartX, optionStartY, optionHeight, optionWidth)
+}
+
+// DrawOptions draws the menu options at x, y
+func (i *Menu) DrawOptions(x, y, h, w int) {
+	DrawStringAtPoint(strings.Repeat("-", w), x, y, i.disabledFg, i.disabledBg)
+	y++
+	if len(i.options) > 0 {
+		// If the currently selected option is disabled, move to the next
+		if i.GetSelectedOption().IsDisabled() {
+			i.SelectNextOption()
+		}
+
+		// Print the options
+		for idx := range i.options {
+			if i.GetSelectedIndex()-idx >= h-1 {
+				// Skip this one
+				continue
+			}
+			currOpt := &i.options[idx]
+			outTxt := currOpt.GetText()
+			if len(outTxt) >= i.width {
+				outTxt = outTxt[:i.width]
+			}
+			if currOpt.IsDisabled() {
+				DrawStringAtPoint(outTxt, x, y, i.disabledFg, i.disabledBg)
+			} else if i.GetSelectedOption() == currOpt {
+				DrawStringAtPoint(AlignText(outTxt, w, AlignLeft), x, y, i.selectedFg, i.selectedBg)
+			} else {
+				DrawStringAtPoint(outTxt, x, y, i.fg, i.bg)
+			}
+			y++
+			if y > i.y+h-1 {
+				break
+			}
+		}
+	}
 }
 
 /* MenuOption Struct & methods */
 
 // MenuOption An option in the menu
 type MenuOption struct {
+	id       string
 	text     string
 	selected bool
 	disabled bool
 	helpText string
+	subMenu  []MenuOption
 }
 
 // CreateOptionFromText just returns a MenuOption object
@@ -388,3 +452,8 @@ func (i *MenuOption) SetHelpText(s string) {
 
 // GetHelpText Returns the help text for this option
 func (i *MenuOption) GetHelpText() string { return i.helpText }
+
+// AddToSubMenu adds a slice of MenuOptions to this option
+func (i *MenuOption) AddToSubMenu(sub *MenuOption) {
+	i.subMenu = append(i.subMenu, *sub)
+}

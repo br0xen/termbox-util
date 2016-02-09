@@ -4,6 +4,7 @@ import "github.com/nsf/termbox-go"
 
 // ProgressBar Just contains the data needed to display a progress bar
 type ProgressBar struct {
+	id             string
 	total          int
 	progress       int
 	allowOverflow  bool
@@ -17,6 +18,7 @@ type ProgressBar struct {
 	x, y          int
 	width, height int
 	bg, fg        termbox.Attribute
+	active        bool
 }
 
 // CreateProgressBar Create a progress bar object
@@ -28,6 +30,22 @@ func CreateProgressBar(tot, x, y int, fg, bg termbox.Attribute) *ProgressBar {
 		alignment: AlignLeft,
 	}
 	return &i
+}
+
+// SetActiveFlag sets this control's active flag
+func (i *ProgressBar) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *ProgressBar) IsActive() bool { return i.active }
+
+// GetID returns this control's ID
+func (i *ProgressBar) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *ProgressBar) SetID(newID string) {
+	i.id = newID
 }
 
 // GetProgress returns the curret progress value
@@ -138,20 +156,20 @@ func (i *ProgressBar) SetWidth(w int) {
 	i.width = w
 }
 
-// GetBackground Return the current background color of the modal
-func (i *ProgressBar) GetBackground() termbox.Attribute { return i.bg }
+// GetFgColor returns the foreground color
+func (i *ProgressBar) GetFgColor() termbox.Attribute { return i.fg }
 
-// SetBackground Set the current background color to bg
-func (i *ProgressBar) SetBackground(bg termbox.Attribute) {
-	i.bg = bg
+// SetFgColor sets the foreground color
+func (i *ProgressBar) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
 }
 
-// GetForeground Return the current foreground color
-func (i *ProgressBar) GetForeground() termbox.Attribute { return i.fg }
+// GetBgColor returns the background color
+func (i *ProgressBar) GetBgColor() termbox.Attribute { return i.bg }
 
-// SetForeground Set the foreground color to fg
-func (i *ProgressBar) SetForeground(fg termbox.Attribute) {
-	i.fg = fg
+// SetBgColor sets the current background color
+func (i *ProgressBar) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
 }
 
 // Align Tells which direction the progress bar empties
@@ -168,8 +186,8 @@ func (i *ProgressBar) SetColorized(c bool) {
 	i.colorized = c
 }
 
-// HandleKeyPress accepts the termbox event and returns whether it was consumed
-func (i *ProgressBar) HandleKeyPress(event termbox.Event) bool {
+// HandleEvent accepts the termbox event and returns whether it was consumed
+func (i *ProgressBar) HandleEvent(event termbox.Event) bool {
 	return false
 }
 

@@ -6,6 +6,7 @@ import (
 
 // ConfirmModal is a modal with yes/no (or similar) buttons
 type ConfirmModal struct {
+	id                  string
 	title               string
 	text                string
 	x, y, width, height int
@@ -16,6 +17,9 @@ type ConfirmModal struct {
 	accepted            bool
 	value               string
 	isVisible           bool
+	bordered            bool
+	tabSkip             bool
+	active              bool
 }
 
 // CreateConfirmModal Creates a confirmation modal with the specified attributes
@@ -26,6 +30,22 @@ func CreateConfirmModal(title string, x, y, width, height int, fg, bg termbox.At
 	}
 	i.showHelp = true
 	return &i
+}
+
+// SetActiveFlag sets this control's active flag
+func (i *ConfirmModal) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *ConfirmModal) IsActive() bool { return i.active }
+
+// GetID returns this control's ID
+func (i *ConfirmModal) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *ConfirmModal) SetID(newID string) {
+	i.id = newID
 }
 
 // GetTitle returns the current title of the modal
@@ -84,20 +104,20 @@ func (i *ConfirmModal) ShowHelp(b bool) {
 	i.showHelp = b
 }
 
-// GetBackground returns the current background color
-func (i *ConfirmModal) GetBackground() termbox.Attribute { return i.bg }
+// GetFgColor returns the foreground color
+func (i *ConfirmModal) GetFgColor() termbox.Attribute { return i.fg }
 
-// SetBackground sets the background color to bg
-func (i *ConfirmModal) SetBackground(bg termbox.Attribute) {
-	i.bg = bg
+// SetFgColor sets the foreground color
+func (i *ConfirmModal) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
 }
 
-// GetForeground returns the current foreground color
-func (i *ConfirmModal) GetForeground() termbox.Attribute { return i.fg }
+// GetBgColor returns the background color
+func (i *ConfirmModal) GetBgColor() termbox.Attribute { return i.bg }
 
-// SetForeground sets the current foreground color to fg
-func (i *ConfirmModal) SetForeground(fg termbox.Attribute) {
-	i.fg = fg
+// SetBgColor sets the current background color
+func (i *ConfirmModal) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
 }
 
 // IsDone returns whether the user has answered the modal
@@ -129,16 +149,38 @@ func (i *ConfirmModal) Clear() {
 	i.isDone = false
 }
 
-// HandleKeyPress handles the termbox event and returns whether it was consumed
-func (i *ConfirmModal) HandleKeyPress(event termbox.Event) bool {
-	if event.Ch == 'Y' || event.Ch == 'y' {
-		i.accepted = true
-		i.isDone = true
-		return true
-	} else if event.Ch == 'N' || event.Ch == 'n' {
-		i.accepted = false
-		i.isDone = true
-		return true
+// IsBordered returns whether this modal is bordered or not
+func (i *ConfirmModal) IsBordered() bool {
+	return i.bordered
+}
+
+// SetBordered sets whether we render a border around the frame
+func (i *ConfirmModal) SetBordered(b bool) {
+	i.bordered = b
+}
+
+// IsTabSkipped returns whether this modal has it's tabskip flag set
+func (i *ConfirmModal) IsTabSkipped() bool {
+	return i.tabSkip
+}
+
+// SetTabSkip sets the tabskip flag for this control
+func (i *ConfirmModal) SetTabSkip(b bool) {
+	i.tabSkip = b
+}
+
+// HandleEvent handles the termbox event and returns whether it was consumed
+func (i *ConfirmModal) HandleEvent(event termbox.Event) bool {
+	if i.active {
+		if event.Ch == 'Y' || event.Ch == 'y' {
+			i.accepted = true
+			i.isDone = true
+			return true
+		} else if event.Ch == 'N' || event.Ch == 'n' {
+			i.accepted = false
+			i.isDone = true
+			return true
+		}
 	}
 	return false
 }
@@ -160,7 +202,6 @@ func (i *ConfirmModal) Draw() {
 	}
 	if i.text != "" {
 		DrawStringAtPoint(i.text, i.x+1, nextY, i.fg, i.bg)
-		nextY++
 	}
 	nextY += 2
 	if i.showHelp {

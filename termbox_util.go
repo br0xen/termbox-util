@@ -8,6 +8,7 @@ import (
 )
 
 type termboxControl interface {
+	GetID() string
 	GetX() int
 	SetX(int)
 	GetY() int
@@ -16,7 +17,17 @@ type termboxControl interface {
 	SetWidth(int)
 	GetHeight() int
 	SetHeight(int)
-	HandleKeyPress(termbox.Event) bool
+	GetFgColor() termbox.Attribute
+	SetFgColor(termbox.Attribute)
+	GetBgColor() termbox.Attribute
+	SetBgColor(termbox.Attribute)
+	HandleEvent(termbox.Event) bool
+	IsBordered() bool
+	SetBordered(bool)
+	SetTabSkip(bool)
+	IsTabSkipped() bool
+	IsActive() bool
+	SetActiveFlag(bool)
 	Draw()
 }
 
@@ -112,21 +123,28 @@ func DrawBorder(x1, y1, x2, y2 int, fg termbox.Attribute, bg termbox.Attribute) 
 
 // AlignText Aligns the text txt within width characters using the specified alignment
 func AlignText(txt string, width int, align TextAlignment) string {
+	return AlignTextWithFill(txt, width, align, ' ')
+}
+
+// AlignTextWithFill Aligns the text txt within width characters using the specified alignment
+// filling any spaces with the 'fill' character
+func AlignTextWithFill(txt string, width int, align TextAlignment, fill rune) string {
+	fillChar := string(fill)
 	numSpaces := width - len(txt)
 	switch align {
 	case AlignCenter:
 		if numSpaces/2 > 0 {
 			return fmt.Sprintf("%s%s%s",
-				strings.Repeat(" ", numSpaces/2),
-				txt, strings.Repeat(" ", numSpaces/2),
+				strings.Repeat(fillChar, numSpaces/2),
+				txt, strings.Repeat(fillChar, numSpaces/2),
 			)
 		}
 		return txt
 	case AlignRight:
-		return fmt.Sprintf("%s%s", strings.Repeat(" ", numSpaces), txt)
+		return fmt.Sprintf("%s%s", strings.Repeat(fillChar, numSpaces), txt)
 	default:
 		if numSpaces >= 0 {
-			return fmt.Sprintf("%s%s", txt, strings.Repeat(" ", numSpaces))
+			return fmt.Sprintf("%s%s", txt, strings.Repeat(fillChar, numSpaces))
 		}
 		return txt
 	}

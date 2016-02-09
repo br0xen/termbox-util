@@ -4,6 +4,7 @@ import "github.com/nsf/termbox-go"
 
 // InputField is a field for inputting text
 type InputField struct {
+	id                  string
 	value               string
 	x, y, width, height int
 	cursor              int
@@ -11,12 +12,30 @@ type InputField struct {
 	bordered            bool
 	wrap                bool
 	multiline           bool
+	tabSkip             bool
+	active              bool
 }
 
 // CreateInputField creates an input field at x, y that is w by h
 func CreateInputField(x, y, w, h int, fg, bg termbox.Attribute) *InputField {
-	i := InputField{x: x, y: y, width: w, height: h, fg: fg, bg: bg}
+	i := InputField{x: x, y: y, width: w, height: h, fg: fg, bg: bg, active: true}
 	return &i
+}
+
+// SetActiveFlag sets this control's active flag
+func (i *InputField) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *InputField) IsActive() bool { return i.active }
+
+// GetID returns this control's ID
+func (i *InputField) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *InputField) SetID(newID string) {
+	i.id = newID
 }
 
 // GetValue gets the current text that is in the InputField
@@ -59,12 +78,38 @@ func (i *InputField) SetHeight(h int) {
 	i.height = h
 }
 
+// GetFgColor returns the foreground color
+func (i *InputField) GetFgColor() termbox.Attribute { return i.fg }
+
+// SetFgColor sets the foreground color
+func (i *InputField) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
+}
+
+// GetBgColor returns the background color
+func (i *InputField) GetBgColor() termbox.Attribute { return i.bg }
+
+// SetBgColor sets the current background color
+func (i *InputField) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
+}
+
 // IsBordered returns true or false if this input field has a border
 func (i *InputField) IsBordered() bool { return i.bordered }
 
 // SetBordered sets whether we render a border around the input field
 func (i *InputField) SetBordered(b bool) {
 	i.bordered = b
+}
+
+// IsTabSkipped returns whether this modal has it's tabskip flag set
+func (i *InputField) IsTabSkipped() bool {
+	return i.tabSkip
+}
+
+// SetTabSkip sets the tabskip flag for this control
+func (i *InputField) SetTabSkip(b bool) {
+	i.tabSkip = b
 }
 
 // DoesWrap returns true or false if this input field wraps text
@@ -83,55 +128,58 @@ func (i *InputField) SetMultiline(b bool) {
 	i.multiline = b
 }
 
-// HandleKeyPress accepts the termbox event and returns whether it was consumed
-func (i *InputField) HandleKeyPress(event termbox.Event) bool {
-	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-		if len(i.value) > 0 {
-			i.value = i.value[:len(i.value)-1]
-		}
-	} else if event.Key == termbox.KeyArrowLeft {
-		if i.cursor+len(i.value) > 0 {
-			i.cursor--
-		}
-	} else if event.Key == termbox.KeyArrowRight {
-		if i.cursor < 0 {
-			i.cursor++
-		}
-	} else if event.Key == termbox.KeyCtrlU {
-		// Ctrl+U Clears the Input (before the cursor)
-		i.value = i.value[i.cursor:]
-	} else {
-		// Get the rune to add to our value. Space and Tab are special cases where
-		// we can't use the event's rune directly
-		var ch string
-		switch event.Key {
-		case termbox.KeySpace:
-			ch = " "
-		case termbox.KeyTab:
-			ch = "\t"
-			/* Multiline is disabled right now
-			case termbox.KeyEnter:
-				if i.multiline {
-					ch = "\n"
+// HandleEvent accepts the termbox event and returns whether it was consumed
+func (i *InputField) HandleEvent(event termbox.Event) bool {
+	if i.active {
+		if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+			if len(i.value) > 0 {
+				i.value = i.value[:len(i.value)-1]
+			}
+		} else if event.Key == termbox.KeyArrowLeft {
+			if i.cursor+len(i.value) > 0 {
+				i.cursor--
+			}
+		} else if event.Key == termbox.KeyArrowRight {
+			if i.cursor < 0 {
+				i.cursor++
+			}
+		} else if event.Key == termbox.KeyCtrlU {
+			// Ctrl+U Clears the Input (before the cursor)
+			i.value = i.value[i.cursor:]
+		} else {
+			// Get the rune to add to our value. Space and Tab are special cases where
+			// we can't use the event's rune directly
+			var ch string
+			switch event.Key {
+			case termbox.KeySpace:
+				ch = " "
+			case termbox.KeyTab:
+				ch = "\t"
+				/* Multiline is disabled right now
+				case termbox.KeyEnter:
+					if i.multiline {
+						ch = "\n"
+					}
+				*/
+			default:
+				if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
+					ch = string(event.Ch)
 				}
-			*/
-		default:
-			if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
-				ch = string(event.Ch)
+			}
+
+			if i.cursor+len(i.value) == 0 {
+				i.value = string(ch) + i.value
+			} else if i.cursor == 0 {
+				i.value = i.value + string(ch)
+			} else {
+				strPt1 := i.value[:(len(i.value) + i.cursor)]
+				strPt2 := i.value[(len(i.value) + i.cursor):]
+				i.value = strPt1 + string(ch) + strPt2
 			}
 		}
-
-		if i.cursor+len(i.value) == 0 {
-			i.value = string(ch) + i.value
-		} else if i.cursor == 0 {
-			i.value = i.value + string(ch)
-		} else {
-			strPt1 := i.value[:(len(i.value) + i.cursor)]
-			strPt2 := i.value[(len(i.value) + i.cursor):]
-			i.value = strPt1 + string(ch) + strPt2
-		}
+		return true
 	}
-	return true
+	return false
 }
 
 // Draw outputs the input field on the screen
@@ -190,7 +238,11 @@ func (i *InputField) Draw() {
 			y++
 			x = startX
 		}
-		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		if i.active {
+			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		} else {
+			termbox.SetCell(x, y, cursorRune, i.fg, i.bg)
+		}
 		x++
 		if len(strPt2) > 0 {
 			lenLeft := maxWidth - len(strPt1) - 1
@@ -219,7 +271,11 @@ func (i *InputField) Draw() {
 			}
 		}
 		x, y = DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		if i.active {
+			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
+		} else {
+			termbox.SetCell(x, y, cursorRune, i.fg, i.bg)
+		}
 		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
 	}
 }

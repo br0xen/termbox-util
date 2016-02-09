@@ -8,15 +8,35 @@ import (
 
 // ASCIIArt is a []string with more functions
 type ASCIIArt struct {
+	id       string
 	contents []string
 	x, y     int
 	bg, fg   termbox.Attribute
+	bordered bool
+	tabSkip  bool
+	active   bool
 }
 
 // CreateASCIIArt Create an ASCII art object from a string slice
 func CreateASCIIArt(c []string, x, y int, fg, bg termbox.Attribute) *ASCIIArt {
-	i := ASCIIArt{contents: c, x: x, y: y, fg: fg, bg: bg}
+	i := ASCIIArt{contents: c, x: x, y: y, fg: fg, bg: bg, bordered: false, tabSkip: true}
 	return &i
+}
+
+// SetActiveFlag sets this control's active flag
+func (i *ASCIIArt) SetActiveFlag(b bool) {
+	i.active = b
+}
+
+// IsActive returns whether this control is active
+func (i *ASCIIArt) IsActive() bool { return i.active }
+
+// GetID returns this control's ID
+func (i *ASCIIArt) GetID() string { return i.id }
+
+// SetID sets this control's ID
+func (i *ASCIIArt) SetID(newID string) {
+	i.id = newID
 }
 
 // GetX Return the x position of the modal
@@ -93,20 +113,20 @@ func (i *ASCIIArt) SetContentLine(s string, idx int) {
 	}
 }
 
-// GetBackground Return the current background color of the modal
-func (i *ASCIIArt) GetBackground() termbox.Attribute { return i.bg }
+// GetFgColor returns the foreground color
+func (i *ASCIIArt) GetFgColor() termbox.Attribute { return i.fg }
 
-// SetBackground Set the current background color to bg
-func (i *ASCIIArt) SetBackground(bg termbox.Attribute) {
-	i.bg = bg
+// SetFgColor sets the foreground color
+func (i *ASCIIArt) SetFgColor(fg termbox.Attribute) {
+	i.fg = fg
 }
 
-// GetForeground Return the current foreground color
-func (i *ASCIIArt) GetForeground() termbox.Attribute { return i.fg }
+// GetBgColor returns the background color
+func (i *ASCIIArt) GetBgColor() termbox.Attribute { return i.bg }
 
-// SetForeground Set the foreground color to fg
-func (i *ASCIIArt) SetForeground(fg termbox.Attribute) {
-	i.fg = fg
+// SetBgColor sets the current background color
+func (i *ASCIIArt) SetBgColor(bg termbox.Attribute) {
+	i.bg = bg
 }
 
 // Align Align the Ascii art over width width with alignment a
@@ -125,8 +145,28 @@ func (i *ASCIIArt) Align(a TextAlignment, width int) {
 	i.contents = newContents
 }
 
-// HandleKeyPress accepts the termbox event and returns whether it was consumed
-func (i *ASCIIArt) HandleKeyPress(event termbox.Event) bool {
+// IsBordered returns whether this modal is bordered or not
+func (i *ASCIIArt) IsBordered() bool {
+	return i.bordered
+}
+
+// SetBordered sets whether we render a border around the frame
+func (i *ASCIIArt) SetBordered(b bool) {
+	i.bordered = b
+}
+
+// IsTabSkipped returns whether this modal has it's tabskip flag set
+func (i *ASCIIArt) IsTabSkipped() bool {
+	return i.tabSkip
+}
+
+// SetTabSkip sets the tabskip flag for this control
+func (i *ASCIIArt) SetTabSkip(b bool) {
+	i.tabSkip = b
+}
+
+// HandleEvent accepts the termbox event and returns whether it was consumed
+func (i *ASCIIArt) HandleEvent(event termbox.Event) bool {
 	return false
 }
 
