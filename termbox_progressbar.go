@@ -18,7 +18,6 @@ type ProgressBar struct {
 	x, y          int
 	width, height int
 	bg, fg        termbox.Attribute
-	active        bool
 }
 
 // CreateProgressBar Create a progress bar object
@@ -31,14 +30,6 @@ func CreateProgressBar(tot, x, y int, fg, bg termbox.Attribute) *ProgressBar {
 	}
 	return &i
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *ProgressBar) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *ProgressBar) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *ProgressBar) GetID() string { return i.id }

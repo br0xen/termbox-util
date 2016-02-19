@@ -19,7 +19,6 @@ type ConfirmModal struct {
 	isVisible           bool
 	bordered            bool
 	tabSkip             bool
-	active              bool
 }
 
 // CreateConfirmModal Creates a confirmation modal with the specified attributes
@@ -31,14 +30,6 @@ func CreateConfirmModal(title string, x, y, width, height int, fg, bg termbox.At
 	i.showHelp = true
 	return &i
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *ConfirmModal) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *ConfirmModal) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *ConfirmModal) GetID() string { return i.id }
@@ -171,16 +162,14 @@ func (i *ConfirmModal) SetTabSkip(b bool) {
 
 // HandleEvent handles the termbox event and returns whether it was consumed
 func (i *ConfirmModal) HandleEvent(event termbox.Event) bool {
-	if i.active {
-		if event.Ch == 'Y' || event.Ch == 'y' {
-			i.accepted = true
-			i.isDone = true
-			return true
-		} else if event.Ch == 'N' || event.Ch == 'n' {
-			i.accepted = false
-			i.isDone = true
-			return true
-		}
+	if event.Ch == 'Y' || event.Ch == 'y' {
+		i.accepted = true
+		i.isDone = true
+		return true
+	} else if event.Ch == 'N' || event.Ch == 'n' {
+		i.accepted = false
+		i.isDone = true
+		return true
 	}
 	return false
 }

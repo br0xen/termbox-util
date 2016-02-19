@@ -12,7 +12,6 @@ type Frame struct {
 	bordered            bool
 	controls            []termboxControl
 	tabSkip             bool
-	active              bool
 }
 
 // CreateFrame creates a Frame at x, y that is w by h
@@ -20,14 +19,6 @@ func CreateFrame(x, y, w, h int, fg, bg termbox.Attribute) *Frame {
 	s := Frame{x: x, y: y, width: w, height: h, fg: fg, bg: bg, bordered: true}
 	return &s
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *Frame) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *Frame) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *Frame) GetID() string { return i.id }
@@ -163,14 +154,11 @@ func (i *Frame) GetBottomY() int {
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
 func (i *Frame) HandleEvent(event termbox.Event) bool {
-	if i.active {
-		if event.Key == termbox.KeyTab {
-			i.FindNextTabStop()
-			return true
-		}
-		return i.controls[i.tabIdx].HandleEvent(event)
+	if event.Key == termbox.KeyTab {
+		i.FindNextTabStop()
+		return true
 	}
-	return false
+	return i.controls[i.tabIdx].HandleEvent(event)
 }
 
 // FindNextTabStop finds the next control that can be tabbed to
@@ -183,9 +171,6 @@ func (i *Frame) FindNextTabStop() bool {
 		if i.tabIdx == startTab {
 			break
 		}
-	}
-	for idx := range i.controls {
-		i.controls[idx].SetActiveFlag(idx == i.tabIdx)
 	}
 	return i.tabIdx != startTab
 }

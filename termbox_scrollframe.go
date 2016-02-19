@@ -12,7 +12,6 @@ type ScrollFrame struct {
 	fg, bg              termbox.Attribute
 	bordered            bool
 	controls            []termboxControl
-	active              bool
 }
 
 // CreateScrollFrame creates Scrolling Frame at x, y that is w by h
@@ -20,14 +19,6 @@ func CreateScrollFrame(x, y, w, h int, fg, bg termbox.Attribute) *ScrollFrame {
 	s := ScrollFrame{x: x, y: y, width: w, height: h, fg: fg, bg: bg}
 	return &s
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *ScrollFrame) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *ScrollFrame) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *ScrollFrame) GetID() string { return i.id }

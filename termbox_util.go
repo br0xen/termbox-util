@@ -26,8 +26,6 @@ type termboxControl interface {
 	SetBordered(bool)
 	SetTabSkip(bool)
 	IsTabSkipped() bool
-	IsActive() bool
-	SetActiveFlag(bool)
 	Draw()
 }
 

@@ -19,7 +19,6 @@ type AlertModal struct {
 	isVisible           bool
 	bordered            bool
 	tabSkip             bool
-	active              bool
 }
 
 // CreateAlertModal Creates a confirmation modal with the specified attributes
@@ -177,21 +176,11 @@ func (i *AlertModal) Clear() {
 	i.isDone = false
 }
 
-// SetActiveFlag sets this control's active flag
-func (i *AlertModal) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *AlertModal) IsActive() bool { return i.active }
-
 // HandleEvent handles the termbox event and returns whether it was consumed
 func (i *AlertModal) HandleEvent(event termbox.Event) bool {
-	if !i.active {
-		if event.Key == termbox.KeyEnter {
-			i.isDone = true
-			return true
-		}
+	if event.Key == termbox.KeyEnter {
+		i.isDone = true
+		return true
 	}
 	return false
 }

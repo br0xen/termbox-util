@@ -9,26 +9,18 @@ type InputField struct {
 	x, y, width, height int
 	cursor              int
 	fg, bg              termbox.Attribute
+	cursorFg, cursorBg  termbox.Attribute
 	bordered            bool
 	wrap                bool
 	multiline           bool
 	tabSkip             bool
-	active              bool
 }
 
 // CreateInputField creates an input field at x, y that is w by h
 func CreateInputField(x, y, w, h int, fg, bg termbox.Attribute) *InputField {
-	i := InputField{x: x, y: y, width: w, height: h, fg: fg, bg: bg, active: true}
+	i := InputField{x: x, y: y, width: w, height: h, fg: fg, bg: bg, cursorFg: bg, cursorBg: fg}
 	return &i
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *InputField) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *InputField) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *InputField) GetID() string { return i.id }
@@ -130,56 +122,53 @@ func (i *InputField) SetMultiline(b bool) {
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
 func (i *InputField) HandleEvent(event termbox.Event) bool {
-	if i.active {
-		if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-			if len(i.value) > 0 {
-				i.value = i.value[:len(i.value)-1]
-			}
-		} else if event.Key == termbox.KeyArrowLeft {
-			if i.cursor+len(i.value) > 0 {
-				i.cursor--
-			}
-		} else if event.Key == termbox.KeyArrowRight {
-			if i.cursor < 0 {
-				i.cursor++
-			}
-		} else if event.Key == termbox.KeyCtrlU {
-			// Ctrl+U Clears the Input (before the cursor)
-			i.value = i.value[i.cursor:]
-		} else {
-			// Get the rune to add to our value. Space and Tab are special cases where
-			// we can't use the event's rune directly
-			var ch string
-			switch event.Key {
-			case termbox.KeySpace:
-				ch = " "
-			case termbox.KeyTab:
-				ch = "\t"
-				/* Multiline is disabled right now
-				case termbox.KeyEnter:
-					if i.multiline {
-						ch = "\n"
-					}
-				*/
-			default:
-				if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
-					ch = string(event.Ch)
+	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
+		if len(i.value) > 0 {
+			i.value = i.value[:len(i.value)-1]
+		}
+	} else if event.Key == termbox.KeyArrowLeft {
+		if i.cursor+len(i.value) > 0 {
+			i.cursor--
+		}
+	} else if event.Key == termbox.KeyArrowRight {
+		if i.cursor < 0 {
+			i.cursor++
+		}
+	} else if event.Key == termbox.KeyCtrlU {
+		// Ctrl+U Clears the Input (before the cursor)
+		i.value = i.value[i.cursor:]
+	} else {
+		// Get the rune to add to our value. Space and Tab are special cases where
+		// we can't use the event's rune directly
+		var ch string
+		switch event.Key {
+		case termbox.KeySpace:
+			ch = " "
+		case termbox.KeyTab:
+			ch = "\t"
+			/* Multiline is disabled right now
+			case termbox.KeyEnter:
+				if i.multiline {
+					ch = "\n"
 				}
-			}
-
-			if i.cursor+len(i.value) == 0 {
-				i.value = string(ch) + i.value
-			} else if i.cursor == 0 {
-				i.value = i.value + string(ch)
-			} else {
-				strPt1 := i.value[:(len(i.value) + i.cursor)]
-				strPt2 := i.value[(len(i.value) + i.cursor):]
-				i.value = strPt1 + string(ch) + strPt2
+			*/
+		default:
+			if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
+				ch = string(event.Ch)
 			}
 		}
-		return true
+
+		if i.cursor+len(i.value) == 0 {
+			i.value = string(ch) + i.value
+		} else if i.cursor == 0 {
+			i.value = i.value + string(ch)
+		} else {
+			strPt1 := i.value[:(len(i.value) + i.cursor)]
+			strPt2 := i.value[(len(i.value) + i.cursor):]
+			i.value = strPt1 + string(ch) + strPt2
+		}
 	}
-	return false
+	return true
 }
 
 // Draw outputs the input field on the screen
@@ -238,11 +227,7 @@ func (i *InputField) Draw() {
 			y++
 			x = startX
 		}
-		if i.active {
-			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-		} else {
-			termbox.SetCell(x, y, cursorRune, i.fg, i.bg)
-		}
+		termbox.SetCell(x, y, cursorRune, i.cursorFg, i.cursorBg)
 		x++
 		if len(strPt2) > 0 {
 			lenLeft := maxWidth - len(strPt1) - 1
@@ -271,11 +256,7 @@ func (i *InputField) Draw() {
 			}
 		}
 		x, y = DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-		if i.active {
-			termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-		} else {
-			termbox.SetCell(x, y, cursorRune, i.fg, i.bg)
-		}
+		termbox.SetCell(x, y, cursorRune, i.cursorFg, i.cursorBg)
 		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
 	}
 }

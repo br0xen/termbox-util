@@ -14,7 +14,6 @@ type ASCIIArt struct {
 	bg, fg   termbox.Attribute
 	bordered bool
 	tabSkip  bool
-	active   bool
 }
 
 // CreateASCIIArt Create an ASCII art object from a string slice
@@ -22,14 +21,6 @@ func CreateASCIIArt(c []string, x, y int, fg, bg termbox.Attribute) *ASCIIArt {
 	i := ASCIIArt{contents: c, x: x, y: y, fg: fg, bg: bg, bordered: false, tabSkip: true}
 	return &i
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *ASCIIArt) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *ASCIIArt) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *ASCIIArt) GetID() string { return i.id }

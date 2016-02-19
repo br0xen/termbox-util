@@ -14,7 +14,6 @@ type DropMenu struct {
 	showMenu               bool
 	bordered               bool
 	tabSkip                bool
-	active                 bool
 }
 
 // CreateDropMenu Creates a menu with the specified attributes
@@ -125,16 +124,6 @@ func (i *DropMenu) SetTabSkip(b bool) {
 	i.tabSkip = b
 }
 
-// SetActiveFlag sets the dropmenu active flag
-func (i *DropMenu) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether the DropMenu is active
-func (i *DropMenu) IsActive() bool {
-	return i.active
-}
-
 // ShowMenu tells the menu to draw the options
 func (i *DropMenu) ShowMenu() {
 	i.showMenu = true
@@ -149,25 +138,23 @@ func (i *DropMenu) HideMenu() {
 
 // HandleEvent handles the termbox event and returns whether it was consumed
 func (i *DropMenu) HandleEvent(event termbox.Event) bool {
-	if i.active {
-		moveUp := (event.Key == termbox.KeyArrowUp || (i.menu.vimMode && event.Ch == 'k'))
-		moveDown := (event.Key == termbox.KeyArrowDown || (i.menu.vimMode && event.Ch == 'j'))
-		if i.menuSelected {
-			selIdx := i.menu.GetSelectedIndex()
-			if (moveUp && selIdx == 0) || (moveDown && selIdx == (len(i.menu.options)-1)) {
-				i.menuSelected = false
-			} else {
-				if i.menu.HandleEvent(event) {
-					if i.menu.IsDone() {
-						i.HideMenu()
-					}
-					return true
-				}
-			}
+	moveUp := (event.Key == termbox.KeyArrowUp || (i.menu.vimMode && event.Ch == 'k'))
+	moveDown := (event.Key == termbox.KeyArrowDown || (i.menu.vimMode && event.Ch == 'j'))
+	if i.menuSelected {
+		selIdx := i.menu.GetSelectedIndex()
+		if (moveUp && selIdx == 0) || (moveDown && selIdx == (len(i.menu.options)-1)) {
+			i.menuSelected = false
 		} else {
-			i.ShowMenu()
-			return true
+			if i.menu.HandleEvent(event) {
+				if i.menu.IsDone() {
+					i.HideMenu()
+				}
+				return true
+			}
 		}
+	} else {
+		i.ShowMenu()
+		return true
 	}
 	return false
 }
@@ -176,7 +163,7 @@ func (i *DropMenu) HandleEvent(event termbox.Event) bool {
 func (i *DropMenu) Draw() {
 	// The title
 	ttlFg, ttlBg := i.fg, i.bg
-	if i.active && !i.menuSelected {
+	if !i.menuSelected {
 		ttlFg, ttlBg = i.selectedFg, i.selectedBg
 	}
 	ttlTxt := i.title

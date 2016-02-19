@@ -12,7 +12,6 @@ type Label struct {
 	bordered            bool
 	wrap                bool
 	multiline           bool
-	active              bool
 }
 
 // CreateLabel creates an input field at x, y that is w by h
@@ -20,14 +19,6 @@ func CreateLabel(lbl string, x, y, w, h int, fg, bg termbox.Attribute) *Label {
 	i := Label{value: lbl, x: x, y: y, width: w, height: h, fg: fg, bg: bg}
 	return &i
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *Label) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *Label) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *Label) GetID() string { return i.id }

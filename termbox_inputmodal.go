@@ -18,7 +18,6 @@ type InputModal struct {
 	isVisible           bool
 	bordered            bool
 	tabSkip             bool
-	active              bool
 }
 
 // CreateInputModal Create an input modal with the given attributes
@@ -30,14 +29,6 @@ func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attr
 	i.isVisible = true
 	return &i
 }
-
-// SetActiveFlag sets this control's active flag
-func (i *InputModal) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *InputModal) IsActive() bool { return i.active }
 
 // GetID returns this control's ID
 func (i *InputModal) GetID() string { return i.id }
@@ -183,15 +174,12 @@ func (i *InputModal) Clear() {
 
 // HandleEvent Handle the termbox event, return true if it was consumed
 func (i *InputModal) HandleEvent(event termbox.Event) bool {
-	if i.active {
-		if event.Key == termbox.KeyEnter {
-			// Done editing
-			i.isDone = true
-			return true
-		}
-		return i.input.HandleEvent(event)
+	if event.Key == termbox.KeyEnter {
+		// Done editing
+		i.isDone = true
+		return true
 	}
-	return false
+	return i.input.HandleEvent(event)
 }
 
 // Draw Draw the modal

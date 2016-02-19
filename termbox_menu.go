@@ -22,7 +22,6 @@ type Menu struct {
 	bordered               bool
 	vimMode                bool
 	tabSkip                bool
-	active                 bool
 }
 
 // CreateMenu Creates a menu with the specified attributes
@@ -250,39 +249,29 @@ func (i *Menu) DisableVimMode() {
 	i.vimMode = false
 }
 
-// SetActiveFlag sets this control's active flag
-func (i *Menu) SetActiveFlag(b bool) {
-	i.active = b
-}
-
-// IsActive returns whether this control is active
-func (i *Menu) IsActive() bool { return i.active }
-
 // HandleEvent handles the termbox event and returns whether it was consumed
 func (i *Menu) HandleEvent(event termbox.Event) bool {
-	if i.active {
-		if event.Key == termbox.KeyEnter || event.Key == termbox.KeySpace {
-			i.isDone = true
-			return true
-		}
-		currentIdx := i.GetSelectedIndex()
-		switch event.Key {
-		case termbox.KeyArrowUp:
-			i.SelectPrevOption()
-		case termbox.KeyArrowDown:
+	if event.Key == termbox.KeyEnter || event.Key == termbox.KeySpace {
+		i.isDone = true
+		return true
+	}
+	currentIdx := i.GetSelectedIndex()
+	switch event.Key {
+	case termbox.KeyArrowUp:
+		i.SelectPrevOption()
+	case termbox.KeyArrowDown:
+		i.SelectNextOption()
+	}
+	if i.vimMode {
+		switch event.Ch {
+		case 'j':
 			i.SelectNextOption()
+		case 'k':
+			i.SelectPrevOption()
 		}
-		if i.vimMode {
-			switch event.Ch {
-			case 'j':
-				i.SelectNextOption()
-			case 'k':
-				i.SelectPrevOption()
-			}
-		}
-		if i.GetSelectedIndex() != currentIdx {
-			return true
-		}
+	}
+	if i.GetSelectedIndex() != currentIdx {
+		return true
 	}
 	return false
 }
