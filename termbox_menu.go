@@ -148,6 +148,16 @@ func (i *Menu) GetSelectedIndex() int {
 	return -1
 }
 
+// SetSelectedIndex sets the selection to setIdx
+func (i *Menu) SetSelectedIndex(idx int) {
+	if idx < 0 {
+		idx = 0
+	} else if idx >= len(i.options) {
+		idx = len(i.options) - 1
+	}
+	i.SetSelectedOption(&i.options[idx])
+}
+
 // SetSelectedOption sets the current selected option to v (if it's valid)
 func (i *Menu) SetSelectedOption(v *MenuOption) {
 	for idx := range i.options {
