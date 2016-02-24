@@ -1,7 +1,7 @@
 package termboxUtil
 
 import (
-	"strings"
+	"strconv"
 
 	"github.com/nsf/termbox-go"
 )
@@ -297,6 +297,7 @@ func (i *Menu) Draw() {
 		optionStartX = i.x + 1
 		optionStartY = i.y + 1
 		optionWidth = i.width - 1
+		optionHeight -= 2
 	}
 
 	// The title
@@ -306,7 +307,9 @@ func (i *Menu) Draw() {
 		if i.bordered {
 			FillWithChar('-', optionStartX, optionStartY, optionWidth, optionStartY, i.fg, i.bg)
 			optionStartY++
+			optionHeight--
 		}
+		optionHeight--
 	}
 
 	if len(i.options) > 0 {
@@ -316,62 +319,37 @@ func (i *Menu) Draw() {
 		}
 
 		// Print the options
-		for idx := range i.options {
+		selIdx := i.GetSelectedIndex()
+		printOptions := i.options
+		startOpts := selIdx - (optionHeight / 2)
+		endOpts := selIdx + (optionHeight / 2)
+		for startOpts < 0 {
+			startOpts++
+			endOpts++
+		}
+
+		printOptions = printOptions[startOpts:]
+		for idx := range printOptions { //i.options {
 			if i.GetSelectedIndex()-idx >= optionHeight-1 {
 				// Skip this one
 				continue
 			}
-			currOpt := &i.options[idx]
+			currOpt := &printOptions[idx]
+			//currOpt := &i.options[idx]
 			outTxt := currOpt.GetText()
+			outTxt = strconv.Itoa(startOpts) + "/" + strconv.Itoa(selIdx) + "/" + strconv.Itoa(endOpts) + " - " + outTxt
 			if len(outTxt) >= i.width {
 				outTxt = outTxt[:i.width]
 			}
 			if currOpt.IsDisabled() {
 				DrawStringAtPoint(outTxt, optionStartX, optionStartY, i.disabledFg, i.disabledBg)
 			} else if i.GetSelectedOption() == currOpt {
-				DrawStringAtPoint(AlignText(outTxt, optionWidth, AlignLeft), optionStartX, optionStartY, i.selectedFg, i.selectedBg)
+				DrawStringAtPoint(outTxt, optionStartX, optionStartY, i.selectedFg, i.selectedBg)
 			} else {
 				DrawStringAtPoint(outTxt, optionStartX, optionStartY, i.fg, i.bg)
 			}
 			optionStartY++
 			if optionStartY > i.y+optionHeight-1 {
-				break
-			}
-		}
-	}
-	i.DrawOptions(optionStartX, optionStartY, optionHeight, optionWidth)
-}
-
-// DrawOptions draws the menu options at x, y
-func (i *Menu) DrawOptions(x, y, h, w int) {
-	DrawStringAtPoint(strings.Repeat("-", w), x, y, i.disabledFg, i.disabledBg)
-	y++
-	if len(i.options) > 0 {
-		// If the currently selected option is disabled, move to the next
-		if i.GetSelectedOption().IsDisabled() {
-			i.SelectNextOption()
-		}
-
-		// Print the options
-		for idx := range i.options {
-			if i.GetSelectedIndex()-idx >= h-1 {
-				// Skip this one
-				continue
-			}
-			currOpt := &i.options[idx]
-			outTxt := currOpt.GetText()
-			if len(outTxt) >= i.width {
-				outTxt = outTxt[:i.width]
-			}
-			if currOpt.IsDisabled() {
-				DrawStringAtPoint(outTxt, x, y, i.disabledFg, i.disabledBg)
-			} else if i.GetSelectedOption() == currOpt {
-				DrawStringAtPoint(AlignText(outTxt, w, AlignLeft), x, y, i.selectedFg, i.selectedBg)
-			} else {
-				DrawStringAtPoint(outTxt, x, y, i.fg, i.bg)
-			}
-			y++
-			if y > i.y+h-1 {
 				break
 			}
 		}
