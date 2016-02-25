@@ -1,10 +1,6 @@
 package termboxUtil
 
-import (
-	"strconv"
-
-	"github.com/nsf/termbox-go"
-)
+import "github.com/nsf/termbox-go"
 
 // Menu is a menu with a list of options
 type Menu struct {
@@ -195,6 +191,40 @@ func (i *Menu) SelectNextOption() {
 	}
 }
 
+// SelectPageUpOption Goes up 'menu height' options
+func (i *Menu) SelectPageUpOption() {
+	idx := i.GetSelectedIndex()
+	idx -= i.height
+	if idx < 0 {
+		idx = 0
+	}
+	i.SetSelectedIndex(idx)
+	return
+}
+
+// SelectPageDownOption Goes down 'menu height' options
+func (i *Menu) SelectPageDownOption() {
+	idx := i.GetSelectedIndex()
+	idx += i.height
+	if idx >= len(i.options) {
+		idx = len(i.options) - 1
+	}
+	i.SetSelectedIndex(idx)
+	return
+}
+
+// SelectFirstOption Goes to the top
+func (i *Menu) SelectFirstOption() {
+	i.SetSelectedIndex(0)
+	return
+}
+
+// SelectLastOption Goes to the bottom
+func (i *Menu) SelectLastOption() {
+	i.SetSelectedIndex(len(i.options) - 1)
+	return
+}
+
 // SetOptionDisabled Disables the specified option
 func (i *Menu) SetOptionDisabled(idx int) {
 	if len(i.options) > idx {
@@ -271,6 +301,10 @@ func (i *Menu) HandleEvent(event termbox.Event) bool {
 		i.SelectPrevOption()
 	case termbox.KeyArrowDown:
 		i.SelectNextOption()
+	case termbox.KeyArrowLeft:
+		i.SelectPageUpOption()
+	case termbox.KeyArrowRight:
+		i.SelectPageDownOption()
 	}
 	if i.vimMode {
 		switch event.Ch {
@@ -278,6 +312,11 @@ func (i *Menu) HandleEvent(event termbox.Event) bool {
 			i.SelectNextOption()
 		case 'k':
 			i.SelectPrevOption()
+		}
+		if event.Key == termbox.KeyCtrlF {
+			i.SelectPageDownOption()
+		} else if event.Key == termbox.KeyCtrlB {
+			i.SelectPageUpOption()
 		}
 	}
 	if i.GetSelectedIndex() != currentIdx {
@@ -329,25 +368,26 @@ func (i *Menu) Draw() {
 		}
 
 		// Print the options
-		selIdx := i.GetSelectedIndex()
-		printOptions := i.options
-		startOpts := selIdx - (optionHeight / 2)
-		endOpts := selIdx + (optionHeight / 2)
-		for startOpts < 0 {
-			startOpts++
-			endOpts++
+		bldHeight := (optionHeight / 2)
+		startIdx := i.GetSelectedIndex()
+		endIdx := i.GetSelectedIndex()
+		for bldHeight > 0 && startIdx >= 1 {
+			startIdx--
+			bldHeight--
+		}
+		bldHeight += (optionHeight / 2)
+		for bldHeight > 0 && endIdx < len(i.options) {
+			endIdx++
+			bldHeight--
 		}
 
-		printOptions = printOptions[startOpts:]
-		for idx := range printOptions { //i.options {
+		for idx := startIdx; idx < endIdx; idx++ { //i.options {
 			if i.GetSelectedIndex()-idx >= optionHeight-1 {
 				// Skip this one
 				continue
 			}
-			currOpt := &printOptions[idx]
-			//currOpt := &i.options[idx]
+			currOpt := &i.options[idx]
 			outTxt := currOpt.GetText()
-			outTxt = strconv.Itoa(startOpts) + "/" + strconv.Itoa(selIdx) + "/" + strconv.Itoa(endOpts) + " - " + outTxt
 			if len(outTxt) >= i.width {
 				outTxt = outTxt[:i.width]
 			}
