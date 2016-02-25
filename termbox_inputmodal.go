@@ -15,9 +15,11 @@ type InputModal struct {
 	cursor              int
 	bg, fg              termbox.Attribute
 	isDone              bool
+	isAccepted          bool
 	isVisible           bool
 	bordered            bool
 	tabSkip             bool
+	inputSelected       bool
 }
 
 // CreateInputModal Create an input modal with the given attributes
@@ -27,6 +29,7 @@ func CreateInputModal(title string, x, y, width, height int, fg, bg termbox.Attr
 	i.showHelp = true
 	i.input.bordered = true
 	i.isVisible = true
+	i.inputSelected = true
 	return &i
 }
 
@@ -86,6 +89,16 @@ func (i *InputModal) SetHeight(height int) {
 	i.height = height
 }
 
+// SetMultiline returns whether this is a multiline modal
+func (i *InputModal) SetMultiline(m bool) {
+	i.input.multiline = m
+}
+
+// IsMultiline returns whether this is a multiline modal
+func (i *InputModal) IsMultiline() bool {
+	return i.input.multiline
+}
+
 // IsBordered returns whether this control is bordered or not
 func (i *InputModal) IsBordered() bool {
 	return i.bordered
@@ -140,6 +153,11 @@ func (i *InputModal) Hide() {
 	i.isVisible = false
 }
 
+// IsVisible returns the isVisible flag
+func (i *InputModal) IsVisible() bool {
+	return i.isVisible
+}
+
 // SetDone Sets the flag that tells whether this modal has completed it's purpose
 func (i *InputModal) SetDone(b bool) {
 	i.isDone = b
@@ -148,6 +166,11 @@ func (i *InputModal) SetDone(b bool) {
 // IsDone Returns the "isDone" flag
 func (i *InputModal) IsDone() bool {
 	return i.isDone
+}
+
+// IsAccepted Returns whether the modal has been accepted
+func (i *InputModal) IsAccepted() bool {
+	return i.isAccepted
 }
 
 // GetValue Return the current value of the input
@@ -175,8 +198,22 @@ func (i *InputModal) Clear() {
 // HandleEvent Handle the termbox event, return true if it was consumed
 func (i *InputModal) HandleEvent(event termbox.Event) bool {
 	if event.Key == termbox.KeyEnter {
+		if !i.input.IsMultiline() || !i.inputSelected {
+			// Done editing
+			i.isDone = true
+			i.isAccepted = true
+		} else {
+			i.input.HandleEvent(event)
+		}
+		return true
+	} else if event.Key == termbox.KeyTab {
+		if i.input.IsMultiline() {
+			i.inputSelected = !i.inputSelected
+		}
+	} else if event.Key == termbox.KeyEsc {
 		// Done editing
 		i.isDone = true
+		i.isAccepted = false
 		return true
 	}
 	return i.input.HandleEvent(event)

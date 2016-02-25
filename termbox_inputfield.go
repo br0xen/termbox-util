@@ -146,18 +146,17 @@ func (i *InputField) HandleEvent(event termbox.Event) bool {
 			ch = " "
 		case termbox.KeyTab:
 			ch = "\t"
-			/* Multiline is disabled right now
-			case termbox.KeyEnter:
-				if i.multiline {
-					ch = "\n"
-				}
-			*/
+		case termbox.KeyEnter:
+			if i.multiline {
+				ch = "\n"
+			}
 		default:
 			if KeyIsAlphaNumeric(event) || KeyIsSymbol(event) {
 				ch = string(event.Ch)
 			}
 		}
 
+		// TODO: Handle newlines
 		if i.cursor+len(i.value) == 0 {
 			i.value = string(ch) + i.value
 		} else if i.cursor == 0 {
