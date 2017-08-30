@@ -123,8 +123,13 @@ func (i *InputField) SetMultiline(b bool) {
 // HandleEvent accepts the termbox event and returns whether it was consumed
 func (i *InputField) HandleEvent(event termbox.Event) bool {
 	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-		if len(i.value) > 0 {
-			i.value = i.value[:len(i.value)-1]
+		if i.cursor+len(i.value) > 0 {
+			crs := len(i.value)
+			if i.cursor < 0 {
+				crs = i.cursor + len(i.value)
+			}
+			i.value = i.value[:crs-1] + i.value[crs:]
+			//i.value = i.value[:len(i.value)-1]
 		}
 	} else if event.Key == termbox.KeyArrowLeft {
 		if i.cursor+len(i.value) > 0 {
@@ -206,12 +211,6 @@ func (i *InputField) Draw() {
 	} else {
 		strPt1, strPt2, cursorRune = "", "", ' '
 	}
-	// Original:
-	/*
-		x, y = DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-		termbox.SetCell(x, y, cursorRune, i.bg, i.fg)
-		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
-	*/
 	if i.wrap {
 		// Split the text into maxWidth chunks
 		for len(strPt1) > maxWidth {
