@@ -20,6 +20,11 @@ func CreateLabel(lbl string, x, y, w, h int, fg, bg termbox.Attribute) *Label {
 	return &i
 }
 
+// IsTabSkipped is always true for a label
+func (i *InputField) IsTabSkipped() bool {
+	return true
+}
+
 // GetID returns this control's ID
 func (i *Label) GetID() string { return i.id }
 
