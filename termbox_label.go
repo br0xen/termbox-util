@@ -21,7 +21,7 @@ func CreateLabel(lbl string, x, y, w, h int, fg, bg termbox.Attribute) *Label {
 }
 
 // IsTabSkipped is always true for a label
-func (i *InputField) IsTabSkipped() bool {
+func (i *Label) IsTabSkipped() bool {
 	return true
 }
 
