@@ -25,6 +25,8 @@ func (i *Label) IsTabSkipped() bool {
 	return true
 }
 
+func (i *Label) SetTabSkip(v bool) {}
+
 // GetID returns this control's ID
 func (i *Label) GetID() string { return i.id }
 
