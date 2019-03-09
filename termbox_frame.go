@@ -130,6 +130,11 @@ func (i *Frame) GetLastControl() termboxControl {
 	return i.controls[len(i.controls)-1]
 }
 
+// RemoveAllControls clears the control slice
+func (i *Frame) RemoveAllControls() {
+	i.controls = []termboxControl{}
+}
+
 // DrawControl figures out the relative position of the control,
 // sets it, draws it, then resets it.
 func (i *Frame) DrawControl(t termboxControl) {
