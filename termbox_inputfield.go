@@ -86,6 +86,16 @@ func (i *InputField) SetBgColor(bg termbox.Attribute) {
 	i.bg = bg
 }
 
+func (i *InputField) SetCursorFg(fg termbox.Attribute) {
+	i.cursorFg = fg
+}
+func (i *InputField) GetCursorFg() termbox.Attribute { return i.cursorFg }
+
+func (i *InputField) SetCursorBg(bg termbox.Attribute) {
+	i.cursorBg = bg
+}
+func (i *InputField) GetCursorBg() termbox.Attribute { return i.cursorBg }
+
 // IsBordered returns true or false if this input field has a border
 func (i *InputField) IsBordered() bool { return i.bordered }
 
