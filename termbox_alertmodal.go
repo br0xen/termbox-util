@@ -13,23 +13,31 @@ type AlertModal struct {
 	showHelp            bool
 	cursor              int
 	bg, fg              termbox.Attribute
+	activeFg, activeBg  termbox.Attribute
 	isDone              bool
 	accepted            bool
 	value               string
 	isVisible           bool
 	bordered            bool
 	tabSkip             bool
+	active              bool
 }
 
 // CreateAlertModal Creates a confirmation modal with the specified attributes
 func CreateAlertModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *AlertModal {
 	i := AlertModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg, bordered: true}
+	i.activeFg, i.activeBg = fg, bg
 	if i.title == "" {
 		i.title = "Alert!"
 	}
 	i.showHelp = true
 	return &i
 }
+
+func (i *AlertModal) SetActiveFgColor(fg termbox.Attribute) { i.activeFg = fg }
+func (i *AlertModal) SetActiveBgColor(bg termbox.Attribute) { i.activeBg = bg }
+func (i *AlertModal) SetActive(a bool)                      { i.active = a }
+func (i *AlertModal) IsActive() bool                        { return i.active }
 
 // GetID returns this control's ID
 func (i *AlertModal) GetID() string { return i.id }

@@ -1,6 +1,7 @@
 package termboxUtil
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -27,6 +28,10 @@ type termboxControl interface {
 	SetTabSkip(bool)
 	IsTabSkipped() bool
 	Draw()
+	SetActive(bool)
+	IsActive() bool
+	SetActiveFgColor(termbox.Attribute)
+	SetActiveBgColor(termbox.Attribute)
 }
 
 // TextAlignment is an int value for how we're aligning text
@@ -106,17 +111,67 @@ func FillWithChar(r rune, x1, y1, x2, y2 int, fg termbox.Attribute, bg termbox.A
 }
 
 // DrawBorder Draw a border around the area inside x1,y1 -> x2, y2
-func DrawBorder(x1, y1, x2, y2 int, fg termbox.Attribute, bg termbox.Attribute) {
-	termbox.SetCell(x1, y1, '+', fg, bg)
-	FillWithChar('-', x1+1, y1, x2-1, y1, fg, bg)
-	termbox.SetCell(x2, y1, '+', fg, bg)
+func DrawBorder(x1, y1, x2, y2 int, fg, bg termbox.Attribute) {
+	termbox.SetCell(x1, y1, '╔', fg, bg)
+	FillWithChar('═', x1+1, y1, x2-1, y1, fg, bg)
+	termbox.SetCell(x2, y1, '╗', fg, bg)
 
-	FillWithChar('|', x1, y1+1, x1, y2-1, fg, bg)
-	FillWithChar('|', x2, y1+1, x2, y2-1, fg, bg)
+	FillWithChar('║', x1, y1+1, x1, y2-1, fg, bg)
+	FillWithChar('║', x2, y1+1, x2, y2-1, fg, bg)
 
-	termbox.SetCell(x1, y2, '+', fg, bg)
-	FillWithChar('-', x1+1, y2, x2-1, y2, fg, bg)
-	termbox.SetCell(x2, y2, '+', fg, bg)
+	termbox.SetCell(x1, y2, '╚', fg, bg)
+	FillWithChar('═', x1+1, y2, x2-1, y2, fg, bg)
+	termbox.SetCell(x2, y2, '╝', fg, bg)
+}
+
+func DrawBorderWithPct(x1, y1, x2, y2 int, pct float64, fg, bg termbox.Attribute) {
+	termbox.SetCell(x1, y1, '╔', fg, bg)
+
+	FillWithChar('═', x1+1, y1, x2-1, y1, fg, bg)
+	termbox.SetCell(x2, y1, '╗', fg, bg)
+
+	FillWithChar('║', x1, y1+1, x1, y2-1, fg, bg)
+	FillWithChar('║', x2, y1+1, x2, y2-1, fg, bg)
+	// Now the percent indicator
+	pctY := int(((float64(y2)-float64(y1)-2)*pct)+float64(y1)) + 1
+	termbox.SetCell(x2, pctY, '▒', fg, bg)
+
+	termbox.SetCell(x1, y2, '╚', fg, bg)
+	FillWithChar('═', x1+1, y2, x2-1, y2, fg, bg)
+	termbox.SetCell(x2, y2, '╝', fg, bg)
+}
+
+func DrawBorderWithTitle(x1, y1, x2, y2 int, title string, fg, bg termbox.Attribute) {
+	termbox.SetCell(x1, y1, '╔', fg, bg)
+
+	DrawStringAtPoint(title, x1+1, y1, fg, bg)
+	FillWithChar('═', x1+len(title)+1, y1, x2-1, y1, fg, bg)
+	termbox.SetCell(x2, y1, '╗', fg, bg)
+
+	FillWithChar('║', x1, y1+1, x1, y2-1, fg, bg)
+	FillWithChar('║', x2, y1+1, x2, y2-1, fg, bg)
+
+	termbox.SetCell(x1, y2, '╚', fg, bg)
+	FillWithChar('═', x1+1, y2, x2-1, y2, fg, bg)
+	termbox.SetCell(x2, y2, '╝', fg, bg)
+}
+
+func DrawBorderWithTitleAndPct(x1, y1, x2, y2 int, title string, pct float64, fg, bg termbox.Attribute) {
+	termbox.SetCell(x1, y1, '╔', fg, bg)
+
+	DrawStringAtPoint(title, x1+1, y1, fg, bg)
+	FillWithChar('═', x1+len(title)+1, y1, x2-1, y1, fg, bg)
+	termbox.SetCell(x2, y1, '╗', fg, bg)
+
+	FillWithChar('║', x1, y1+1, x1, y2-1, fg, bg)
+	FillWithChar('║', x2, y1+1, x2, y2-1, fg, bg)
+	// Now the percent indicator
+	pctY := int(((float64(y2)-float64(y1)-2)*pct)+float64(y1)) + 1
+	termbox.SetCell(x2, pctY, '▒', fg, bg)
+
+	termbox.SetCell(x1, y2, '╚', fg, bg)
+	FillWithChar('═', x1+1, y2, x2-1, y2, fg, bg)
+	termbox.SetCell(x2, y2, '╝', fg, bg)
 }
 
 // AlignText Aligns the text txt within width characters using the specified alignment
@@ -146,6 +201,21 @@ func AlignTextWithFill(txt string, width int, align TextAlignment, fill rune) st
 		}
 		return txt
 	}
+}
+
+func ToLabel(c termboxControl) (*Label, error) {
+	v, ok := c.(*Label)
+	if ok {
+		return v, nil
+	}
+	return nil, errors.New("Control isn't a Label")
+}
+func ToInputField(c termboxControl) (*InputField, error) {
+	v, ok := c.(*InputField)
+	if ok {
+		return v, nil
+	}
+	return nil, errors.New("Control isn't an Input Field")
 }
 
 /* More advanced things are in their respective files */

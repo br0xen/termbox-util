@@ -12,7 +12,8 @@ type ConfirmModal struct {
 	x, y, width, height int
 	showHelp            bool
 	cursor              int
-	bg, fg              termbox.Attribute
+	fg, bg              termbox.Attribute
+	activeFg, activeBg  termbox.Attribute
 	isDone              bool
 	accepted            bool
 	value               string
@@ -23,7 +24,7 @@ type ConfirmModal struct {
 
 // CreateConfirmModal Creates a confirmation modal with the specified attributes
 func CreateConfirmModal(title string, x, y, width, height int, fg, bg termbox.Attribute) *ConfirmModal {
-	i := ConfirmModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg}
+	i := ConfirmModal{title: title, x: x, y: y, width: width, height: height, fg: fg, bg: bg, activeFg: fg, activeBg: bg}
 	if i.title == "" && i.text == "" {
 		i.title = "Confirm?"
 	}

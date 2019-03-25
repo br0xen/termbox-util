@@ -9,187 +9,252 @@ type Frame struct {
 	x, y, width, height int
 	tabIdx              int
 	fg, bg              termbox.Attribute
+	activeFg, activeBg  termbox.Attribute
 	bordered            bool
 	controls            []termboxControl
 	tabSkip             bool
+	active              bool
+	title               string
 }
 
 // CreateFrame creates a Frame at x, y that is w by h
 func CreateFrame(x, y, w, h int, fg, bg termbox.Attribute) *Frame {
-	s := Frame{x: x, y: y, width: w, height: h, fg: fg, bg: bg, bordered: true}
-	return &s
+	c := Frame{x: x, y: y, width: w, height: h,
+		fg: fg, bg: bg, activeFg: fg, activeBg: bg,
+		bordered: true,
+	}
+	return &c
 }
 
+func (c *Frame) SetTitle(title string) { c.title = title }
+
+// Setting color attributes on a frame trickles down to its controls
+func (c *Frame) SetActiveFgColor(fg termbox.Attribute) {
+	c.activeFg = fg
+	for _, v := range c.controls {
+		v.SetActiveFgColor(fg)
+	}
+}
+func (c *Frame) SetActiveBgColor(bg termbox.Attribute) {
+	c.activeBg = bg
+	for _, v := range c.controls {
+		v.SetActiveBgColor(bg)
+	}
+}
+func (c *Frame) SetActive(a bool) {
+	c.active = a
+	for idx := range c.controls {
+		if idx == c.tabIdx && a {
+			c.controls[idx].SetActive(true)
+		} else {
+			c.controls[idx].SetActive(false)
+		}
+	}
+}
+func (c *Frame) IsActive() bool { return c.active }
+
 // GetID returns this control's ID
-func (i *Frame) GetID() string { return i.id }
+func (c *Frame) GetID() string { return c.id }
 
 // SetID sets this control's ID
-func (i *Frame) SetID(newID string) {
-	i.id = newID
+func (c *Frame) SetID(newID string) {
+	c.id = newID
 }
 
 // GetX returns the x position of the frame
-func (i *Frame) GetX() int { return i.x }
+func (c *Frame) GetX() int { return c.x }
 
 // SetX sets the x position of the frame
-func (i *Frame) SetX(x int) {
-	i.x = x
+func (c *Frame) SetX(x int) {
+	c.x = x
 }
 
 // GetY returns the y position of the frame
-func (i *Frame) GetY() int { return i.y }
+func (c *Frame) GetY() int { return c.y }
 
 // SetY sets the y position of the frame
-func (i *Frame) SetY(y int) {
-	i.y = y
+func (c *Frame) SetY(y int) {
+	c.y = y
 }
 
 // GetWidth returns the current width of the frame
-func (i *Frame) GetWidth() int { return i.width }
+func (c *Frame) GetWidth() int { return c.width }
 
 // SetWidth sets the current width of the frame
-func (i *Frame) SetWidth(w int) {
-	i.width = w
+func (c *Frame) SetWidth(w int) {
+	c.width = w
 }
 
 // GetHeight returns the current height of the frame
-func (i *Frame) GetHeight() int { return i.height }
+func (c *Frame) GetHeight() int { return c.height }
 
 // SetHeight sets the current height of the frame
-func (i *Frame) SetHeight(h int) {
-	i.height = h
+func (c *Frame) SetHeight(h int) {
+	c.height = h
 }
 
 // GetFgColor returns the foreground color
-func (i *Frame) GetFgColor() termbox.Attribute { return i.fg }
+func (c *Frame) GetFgColor() termbox.Attribute { return c.fg }
 
 // SetFgColor sets the foreground color
-func (i *Frame) SetFgColor(fg termbox.Attribute) {
-	i.fg = fg
+func (c *Frame) SetFgColor(fg termbox.Attribute) {
+	c.fg = fg
 }
 
 // GetBgColor returns the background color
-func (i *Frame) GetBgColor() termbox.Attribute { return i.bg }
+func (c *Frame) GetBgColor() termbox.Attribute { return c.bg }
 
 // SetBgColor sets the current background color
-func (i *Frame) SetBgColor(bg termbox.Attribute) {
-	i.bg = bg
+func (c *Frame) SetBgColor(bg termbox.Attribute) {
+	c.bg = bg
 }
 
 // IsBordered returns true or false if this frame has a border
-func (i *Frame) IsBordered() bool { return i.bordered }
+func (c *Frame) IsBordered() bool { return c.bordered }
 
 // SetBordered sets whether we render a border around the frame
-func (i *Frame) SetBordered(b bool) {
-	i.bordered = b
+func (c *Frame) SetBordered(b bool) {
+	c.bordered = b
 }
 
 // IsTabSkipped returns whether this modal has it's tabskip flag set
-func (i *Frame) IsTabSkipped() bool {
-	return i.tabSkip
+func (c *Frame) IsTabSkipped() bool {
+	return c.tabSkip
 }
 
 // SetTabSkip sets the tabskip flag for this control
-func (i *Frame) SetTabSkip(b bool) {
-	i.tabSkip = b
+func (c *Frame) SetTabSkip(b bool) {
+	c.tabSkip = b
 }
 
 // AddControl adds a control to the frame
-func (i *Frame) AddControl(t termboxControl) {
-	i.controls = append(i.controls, t)
+func (c *Frame) AddControl(t termboxControl) {
+	c.controls = append(c.controls, t)
+}
+
+func (c *Frame) ResetTabIndex() {
+	for k, v := range c.controls {
+		if !v.IsTabSkipped() {
+			c.tabIdx = k
+			break
+		}
+	}
 }
 
 // GetActiveControl returns the control at tabIdx
-func (i *Frame) GetActiveControl() termboxControl {
-	if len(i.controls) >= i.tabIdx {
-		return i.controls[i.tabIdx]
+func (c *Frame) GetActiveControl() termboxControl {
+	if len(c.controls) >= c.tabIdx {
+		if c.controls[c.tabIdx].IsTabSkipped() {
+			c.FindNextTabStop()
+		}
+		return c.controls[c.tabIdx]
 	}
 	return nil
 }
 
 // GetControls returns a slice of all controls
-func (i *Frame) GetControls() []termboxControl {
-	return i.controls
+func (c *Frame) GetControls() []termboxControl {
+	return c.controls
 }
 
 // GetControl returns the control at index i
-func (i *Frame) GetControl(idx int) termboxControl {
-	if len(i.controls) >= idx {
-		return i.controls[idx]
+func (c *Frame) GetControl(idx int) termboxControl {
+	if len(c.controls) >= idx {
+		return c.controls[idx]
 	}
 	return nil
 }
 
 // GetControlCount returns the number of controls contained
-func (i *Frame) GetControlCount() int {
-	return len(i.controls)
+func (c *Frame) GetControlCount() int {
+	return len(c.controls)
 }
 
 // GetLastControl returns the last control contained
-func (i *Frame) GetLastControl() termboxControl {
-	return i.controls[len(i.controls)-1]
+func (c *Frame) GetLastControl() termboxControl {
+	return c.controls[len(c.controls)-1]
 }
 
 // RemoveAllControls clears the control slice
-func (i *Frame) RemoveAllControls() {
-	i.controls = []termboxControl{}
+func (c *Frame) RemoveAllControls() {
+	c.controls = []termboxControl{}
 }
 
 // DrawControl figures out the relative position of the control,
 // sets it, draws it, then resets it.
-func (i *Frame) DrawControl(t termboxControl) {
+func (c *Frame) DrawControl(t termboxControl) {
 	ctlX, ctlY := t.GetX(), t.GetY()
-	t.SetX((i.GetX() + ctlX))
-	t.SetY((i.GetY() + ctlY))
+	t.SetX((c.GetX() + ctlX))
+	t.SetY((c.GetY() + ctlY))
 	t.Draw()
 	t.SetX(ctlX)
 	t.SetY(ctlY)
 }
 
 // GetBottomY returns the y of the lowest control in the frame
-func (i *Frame) GetBottomY() int {
+func (c *Frame) GetBottomY() int {
 	var ret int
-	for idx := range i.controls {
-		if i.controls[idx].GetY()+i.controls[idx].GetHeight() > ret {
-			ret = i.controls[idx].GetY() + i.controls[idx].GetHeight()
+	for idx := range c.controls {
+		if c.controls[idx].GetY()+c.controls[idx].GetHeight() > ret {
+			ret = c.controls[idx].GetY() + c.controls[idx].GetHeight()
 		}
 	}
 	return ret
 }
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
-func (i *Frame) HandleEvent(event termbox.Event) bool {
+func (c *Frame) HandleEvent(event termbox.Event) bool {
 	if event.Key == termbox.KeyTab {
-		i.FindNextTabStop()
+		c.FindNextTabStop()
 		return true
 	}
-	return i.controls[i.tabIdx].HandleEvent(event)
+	return c.controls[c.tabIdx].HandleEvent(event)
 }
 
 // FindNextTabStop finds the next control that can be tabbed to
 // A return of true means it found a different one than we started on.
-func (i *Frame) FindNextTabStop() bool {
-	startTab := i.tabIdx
-	i.tabIdx = (i.tabIdx + 1) % len(i.controls)
-	for i.controls[i.tabIdx].IsTabSkipped() {
-		i.tabIdx = (i.tabIdx + 1) % len(i.controls)
-		if i.tabIdx == startTab {
+func (c *Frame) FindNextTabStop() bool {
+	startTab := c.tabIdx
+	c.tabIdx = (c.tabIdx + 1) % len(c.controls)
+	for c.controls[c.tabIdx].IsTabSkipped() {
+		c.tabIdx = (c.tabIdx + 1) % len(c.controls)
+		if c.tabIdx == startTab {
 			break
 		}
 	}
-	return i.tabIdx != startTab
+	return c.tabIdx != startTab
+}
+
+// IsOnLastControl returns true if the active control
+// is the last control that isn't tab skippable.
+func (c *Frame) IsOnLastControl() bool {
+	for _, v := range c.controls[c.tabIdx+1:] {
+		if !v.IsTabSkipped() {
+			return false
+		}
+	}
+	return true
 }
 
 // Draw outputs the Scoll Frame on the screen
-func (i *Frame) Draw() {
-	maxWidth := i.width
-	maxHeight := i.height
-	x, y := i.x, i.y
-	startX := i.x
-	startY := i.y
-	if i.bordered {
-		FillWithChar(' ', i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
-		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+func (c *Frame) Draw() {
+	maxWidth := c.width
+	maxHeight := c.height
+	x, y := c.x, c.y
+	startX := c.x
+	startY := c.y
+	borderFg, borderBg := c.fg, c.bg
+	if c.active {
+		borderFg, borderBg = c.activeFg, c.activeBg
+	}
+	if c.bordered {
+		// Clear the framed area
+		FillWithChar(' ', c.x, c.y, c.x+c.width, c.y+c.height, borderFg, borderBg)
+		if c.title == "" {
+			DrawBorder(c.x, c.y, c.x+c.width, c.y+c.height, borderFg, borderBg)
+		} else {
+			DrawBorderWithTitle(c.x, c.y, c.x+c.width, c.y+c.height, " "+c.title+" ", borderFg, borderBg)
+		}
 		maxWidth--
 		maxHeight--
 		x++
@@ -197,7 +262,12 @@ func (i *Frame) Draw() {
 		startX++
 		startY++
 	}
-	for idx := range i.controls {
-		i.DrawControl(i.controls[idx])
+	for idx := range c.controls {
+		if idx == c.tabIdx {
+			c.controls[idx].SetActive(true)
+		} else {
+			c.controls[idx].SetActive(false)
+		}
+		c.DrawControl(c.controls[idx])
 	}
 }

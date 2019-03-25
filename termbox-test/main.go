@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"gogs.bullercodeworks.com/brian/termbox-util"
+	"github.com/br0xen/termbox-util"
 
 	"github.com/nsf/termbox-go"
 )

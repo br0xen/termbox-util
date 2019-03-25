@@ -5,153 +5,164 @@ import "github.com/nsf/termbox-go"
 // InputField is a field for inputting text
 type InputField struct {
 	id                  string
+	title               string
 	value               string
 	x, y, width, height int
 	cursor              int
 	fg, bg              termbox.Attribute
+	activeFg, activeBg  termbox.Attribute
 	cursorFg, cursorBg  termbox.Attribute
 	bordered            bool
 	wrap                bool
 	multiline           bool
 	tabSkip             bool
+	active              bool
 }
 
 // CreateInputField creates an input field at x, y that is w by h
 func CreateInputField(x, y, w, h int, fg, bg termbox.Attribute) *InputField {
-	i := InputField{x: x, y: y, width: w, height: h, fg: fg, bg: bg, cursorFg: bg, cursorBg: fg}
-	return &i
+	c := InputField{x: x, y: y, width: w, height: h,
+		fg: fg, bg: bg, cursorFg: bg, cursorBg: fg, activeFg: fg, activeBg: bg,
+	}
+	return &c
 }
 
+func (c *InputField) SetTitle(title string)                 { c.title = title }
+func (c *InputField) SetActiveFgColor(fg termbox.Attribute) { c.activeFg = fg }
+func (c *InputField) SetActiveBgColor(bg termbox.Attribute) { c.activeBg = bg }
+func (c *InputField) SetActive(a bool)                      { c.active = a }
+func (c *InputField) IsActive() bool                        { return c.active }
+
 // GetID returns this control's ID
-func (i *InputField) GetID() string { return i.id }
+func (c *InputField) GetID() string { return c.id }
 
 // SetID sets this control's ID
-func (i *InputField) SetID(newID string) {
-	i.id = newID
+func (c *InputField) SetID(newID string) {
+	c.id = newID
 }
 
 // GetValue gets the current text that is in the InputField
-func (i *InputField) GetValue() string { return i.value }
+func (c *InputField) GetValue() string { return c.value }
 
 // SetValue sets the current text in the InputField to s
-func (i *InputField) SetValue(s string) {
-	i.value = s
+func (c *InputField) SetValue(s string) {
+	c.value = s
 }
 
 // GetX returns the x position of the input field
-func (i *InputField) GetX() int { return i.x }
+func (c *InputField) GetX() int { return c.x }
 
 // SetX sets the x position of the input field
-func (i *InputField) SetX(x int) {
-	i.x = x
+func (c *InputField) SetX(x int) {
+	c.x = x
 }
 
 // GetY returns the y position of the input field
-func (i *InputField) GetY() int { return i.y }
+func (c *InputField) GetY() int { return c.y }
 
 // SetY sets the y position of the input field
-func (i *InputField) SetY(y int) {
-	i.y = y
+func (c *InputField) SetY(y int) {
+	c.y = y
 }
 
 // GetWidth returns the current width of the input field
-func (i *InputField) GetWidth() int { return i.width }
+func (c *InputField) GetWidth() int { return c.width }
 
 // SetWidth sets the current width of the input field
-func (i *InputField) SetWidth(w int) {
-	i.width = w
+func (c *InputField) SetWidth(w int) {
+	c.width = w
 }
 
 // GetHeight returns the current height of the input field
-func (i *InputField) GetHeight() int { return i.height }
+func (c *InputField) GetHeight() int { return c.height }
 
 // SetHeight sets the current height of the input field
-func (i *InputField) SetHeight(h int) {
-	i.height = h
+func (c *InputField) SetHeight(h int) {
+	c.height = h
 }
 
 // GetFgColor returns the foreground color
-func (i *InputField) GetFgColor() termbox.Attribute { return i.fg }
+func (c *InputField) GetFgColor() termbox.Attribute { return c.fg }
 
 // SetFgColor sets the foreground color
-func (i *InputField) SetFgColor(fg termbox.Attribute) {
-	i.fg = fg
+func (c *InputField) SetFgColor(fg termbox.Attribute) {
+	c.fg = fg
 }
 
 // GetBgColor returns the background color
-func (i *InputField) GetBgColor() termbox.Attribute { return i.bg }
+func (c *InputField) GetBgColor() termbox.Attribute { return c.bg }
 
 // SetBgColor sets the current background color
-func (i *InputField) SetBgColor(bg termbox.Attribute) {
-	i.bg = bg
+func (c *InputField) SetBgColor(bg termbox.Attribute) {
+	c.bg = bg
 }
 
-func (i *InputField) SetCursorFg(fg termbox.Attribute) {
-	i.cursorFg = fg
+func (c *InputField) SetCursorFg(fg termbox.Attribute) {
+	c.cursorFg = fg
 }
-func (i *InputField) GetCursorFg() termbox.Attribute { return i.cursorFg }
+func (c *InputField) GetCursorFg() termbox.Attribute { return c.cursorFg }
 
-func (i *InputField) SetCursorBg(bg termbox.Attribute) {
-	i.cursorBg = bg
+func (c *InputField) SetCursorBg(bg termbox.Attribute) {
+	c.cursorBg = bg
 }
-func (i *InputField) GetCursorBg() termbox.Attribute { return i.cursorBg }
+func (c *InputField) GetCursorBg() termbox.Attribute { return c.cursorBg }
 
 // IsBordered returns true or false if this input field has a border
-func (i *InputField) IsBordered() bool { return i.bordered }
+func (c *InputField) IsBordered() bool { return c.bordered }
 
 // SetBordered sets whether we render a border around the input field
-func (i *InputField) SetBordered(b bool) {
-	i.bordered = b
+func (c *InputField) SetBordered(b bool) {
+	c.bordered = b
 }
 
 // IsTabSkipped returns whether this modal has it's tabskip flag set
-func (i *InputField) IsTabSkipped() bool {
-	return i.tabSkip
+func (c *InputField) IsTabSkipped() bool {
+	return c.tabSkip
 }
 
 // SetTabSkip sets the tabskip flag for this control
-func (i *InputField) SetTabSkip(b bool) {
-	i.tabSkip = b
+func (c *InputField) SetTabSkip(b bool) {
+	c.tabSkip = b
 }
 
 // DoesWrap returns true or false if this input field wraps text
-func (i *InputField) DoesWrap() bool { return i.wrap }
+func (c *InputField) DoesWrap() bool { return c.wrap }
 
 // SetWrap sets whether we wrap the text at width.
-func (i *InputField) SetWrap(b bool) {
-	i.wrap = b
+func (c *InputField) SetWrap(b bool) {
+	c.wrap = b
 }
 
 // IsMultiline returns true or false if this field can have multiple lines
-func (i *InputField) IsMultiline() bool { return i.multiline }
+func (c *InputField) IsMultiline() bool { return c.multiline }
 
 // SetMultiline sets whether the field can have multiple lines
-func (i *InputField) SetMultiline(b bool) {
-	i.multiline = b
+func (c *InputField) SetMultiline(b bool) {
+	c.multiline = b
 }
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
-func (i *InputField) HandleEvent(event termbox.Event) bool {
+func (c *InputField) HandleEvent(event termbox.Event) bool {
 	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
-		if i.cursor+len(i.value) > 0 {
-			crs := len(i.value)
-			if i.cursor < 0 {
-				crs = i.cursor + len(i.value)
+		if c.cursor+len(c.value) > 0 {
+			crs := len(c.value)
+			if c.cursor < 0 {
+				crs = c.cursor + len(c.value)
 			}
-			i.value = i.value[:crs-1] + i.value[crs:]
-			//i.value = i.value[:len(i.value)-1]
+			c.value = c.value[:crs-1] + c.value[crs:]
+			//c.value = c.value[:len(c.value)-1]
 		}
 	} else if event.Key == termbox.KeyArrowLeft {
-		if i.cursor+len(i.value) > 0 {
-			i.cursor--
+		if c.cursor+len(c.value) > 0 {
+			c.cursor--
 		}
 	} else if event.Key == termbox.KeyArrowRight {
-		if i.cursor < 0 {
-			i.cursor++
+		if c.cursor < 0 {
+			c.cursor++
 		}
 	} else if event.Key == termbox.KeyCtrlU {
 		// Ctrl+U Clears the Input (before the cursor)
-		i.value = i.value[i.cursor+len(i.value):]
+		c.value = c.value[c.cursor+len(c.value):]
 	} else {
 		// Get the rune to add to our value. Space and Tab are special cases where
 		// we can't use the event's rune directly
@@ -162,7 +173,7 @@ func (i *InputField) HandleEvent(event termbox.Event) bool {
 		case termbox.KeyTab:
 			ch = "\t"
 		case termbox.KeyEnter:
-			if i.multiline {
+			if c.multiline {
 				ch = "\n"
 			}
 		default:
@@ -172,28 +183,32 @@ func (i *InputField) HandleEvent(event termbox.Event) bool {
 		}
 
 		// TODO: Handle newlines
-		if i.cursor+len(i.value) == 0 {
-			i.value = string(ch) + i.value
-		} else if i.cursor == 0 {
-			i.value = i.value + string(ch)
+		if c.cursor+len(c.value) == 0 {
+			c.value = string(ch) + c.value
+		} else if c.cursor == 0 {
+			c.value = c.value + string(ch)
 		} else {
-			strPt1 := i.value[:(len(i.value) + i.cursor)]
-			strPt2 := i.value[(len(i.value) + i.cursor):]
-			i.value = strPt1 + string(ch) + strPt2
+			strPt1 := c.value[:(len(c.value) + c.cursor)]
+			strPt2 := c.value[(len(c.value) + c.cursor):]
+			c.value = strPt1 + string(ch) + strPt2
 		}
 	}
 	return true
 }
 
 // Draw outputs the input field on the screen
-func (i *InputField) Draw() {
-	maxWidth := i.width
-	maxHeight := i.height
-	x, y := i.x, i.y
-	startX := i.x
-	startY := i.y
-	if i.bordered {
-		DrawBorder(i.x, i.y, i.x+i.width, i.y+i.height, i.fg, i.bg)
+func (c *InputField) Draw() {
+	maxWidth := c.width
+	maxHeight := c.height
+	x, y := c.x, c.y
+	startX := c.x
+	startY := c.y
+	useFg, useBg := c.fg, c.bg
+	if c.active {
+		useFg, useBg = c.activeFg, c.activeBg
+	}
+	if c.bordered {
+		DrawBorder(c.x, c.y, c.x+c.width, c.y+c.height, useFg, useBg)
 		maxWidth--
 		maxHeight--
 		x++
@@ -204,53 +219,60 @@ func (i *InputField) Draw() {
 
 	var strPt1, strPt2 string
 	var cursorRune rune
-	if len(i.value) > 0 {
-		if i.cursor+len(i.value) == 0 {
+	if len(c.value) > 0 {
+		if c.cursor+len(c.value) == 0 {
 			strPt1 = ""
-			strPt2 = i.value[1:]
-			cursorRune = rune(i.value[0])
-		} else if i.cursor == 0 {
-			strPt1 = i.value
+			strPt2 = c.value[1:]
+			cursorRune = rune(c.value[0])
+		} else if c.cursor == 0 {
+			strPt1 = c.value
 			strPt2 = ""
 			cursorRune = ' '
 		} else {
-			strPt1 = i.value[:(len(i.value) + i.cursor)]
-			strPt2 = i.value[(len(i.value)+i.cursor)+1:]
-			cursorRune = rune(i.value[len(i.value)+i.cursor])
+			strPt1 = c.value[:(len(c.value) + c.cursor)]
+			strPt2 = c.value[(len(c.value)+c.cursor)+1:]
+			cursorRune = rune(c.value[len(c.value)+c.cursor])
 		}
 	} else {
 		strPt1, strPt2, cursorRune = "", "", ' '
 	}
-	if i.wrap {
+	if c.title != "" {
+		if c.active {
+			DrawStringAtPoint(c.title, x, y, c.activeFg, c.activeBg)
+		} else {
+			DrawStringAtPoint(c.title, x, y, useFg, useBg)
+		}
+	}
+	if c.wrap {
 		// Split the text into maxWidth chunks
 		for len(strPt1) > maxWidth {
 			breakAt := maxWidth
-			DrawStringAtPoint(strPt1[:breakAt], x, y, i.fg, i.bg)
+			DrawStringAtPoint(strPt1[:breakAt], x, y, useFg, useBg)
 			x = startX
 			y++
 			strPt1 = strPt1[breakAt:]
 		}
-		x, y = DrawStringAtPoint(strPt1, x, y, i.fg, i.bg)
+		x, y = DrawStringAtPoint(strPt1, x, y, useFg, useBg)
 		if x >= maxWidth {
 			y++
 			x = startX
 		}
-		termbox.SetCell(x, y, cursorRune, i.cursorFg, i.cursorBg)
+		termbox.SetCell(x, y, cursorRune, c.cursorFg, c.cursorBg)
 		x++
 		if len(strPt2) > 0 {
 			lenLeft := maxWidth - len(strPt1) - 1
 			if lenLeft > 0 && len(strPt2) > lenLeft {
-				DrawStringAtPoint(strPt2[:lenLeft], x+1, y, i.fg, i.bg)
+				DrawStringAtPoint(strPt2[:lenLeft], x+1, y, useFg, useBg)
 				strPt2 = strPt2[lenLeft:]
 			}
 			for len(strPt2) > maxWidth {
 				breakAt := maxWidth
-				DrawStringAtPoint(strPt2[:breakAt], x, y, i.fg, i.bg)
+				DrawStringAtPoint(strPt2[:breakAt], x, y, useFg, useBg)
 				x = startX
 				y++
 				strPt2 = strPt2[breakAt:]
 			}
-			x, y = DrawStringAtPoint(strPt2, x, y, i.fg, i.bg)
+			x, y = DrawStringAtPoint(strPt2, x, y, useFg, useBg)
 		}
 	} else {
 		for len(strPt1)+len(strPt2)+1 > maxWidth {
@@ -263,8 +285,12 @@ func (i *InputField) Draw() {
 				strPt2 = strPt2[:len(strPt2)-1]
 			}
 		}
-		x, y = DrawStringAtPoint(strPt1, i.x+1, i.y+1, i.fg, i.bg)
-		termbox.SetCell(x, y, cursorRune, i.cursorFg, i.cursorBg)
-		DrawStringAtPoint(strPt2, x+1, y, i.fg, i.bg)
+		x, y = DrawStringAtPoint(strPt1, c.x+len(c.title), c.y, useFg, useBg)
+		if c.active {
+			termbox.SetCell(x, y, cursorRune, c.cursorFg, c.cursorBg)
+		} else {
+			termbox.SetCell(x, y, cursorRune, useFg, useBg)
+		}
+		DrawStringAtPoint(strPt2, x+1, y, useFg, useBg)
 	}
 }

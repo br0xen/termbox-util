@@ -8,17 +8,20 @@ import (
 
 // ASCIIArt is a []string with more functions
 type ASCIIArt struct {
-	id       string
-	contents []string
-	x, y     int
-	bg, fg   termbox.Attribute
-	bordered bool
-	tabSkip  bool
+	id                 string
+	contents           []string
+	x, y               int
+	bg, fg             termbox.Attribute
+	activeFg, activeBg termbox.Attribute
+	bordered           bool
+	tabSkip            bool
+	active             bool
 }
 
 // CreateASCIIArt Create an ASCII art object from a string slice
 func CreateASCIIArt(c []string, x, y int, fg, bg termbox.Attribute) *ASCIIArt {
 	i := ASCIIArt{contents: c, x: x, y: y, fg: fg, bg: bg, bordered: false, tabSkip: true}
+	i.activeFg, i.activeBg = fg, bg
 	return &i
 }
 
@@ -86,6 +89,11 @@ func (i *ASCIIArt) SetWidth(w int) {
 		}
 	}
 }
+
+func (i *ASCIIArt) SetActiveFgColor(fg termbox.Attribute) { i.activeFg = fg }
+func (i *ASCIIArt) SetActiveBgColor(bg termbox.Attribute) { i.activeBg = bg }
+func (i *ASCIIArt) SetActive(a bool)                      { i.active = a }
+func (i *ASCIIArt) IsActive() bool                        { return i.active }
 
 // SetContents Sets the contents of i to c
 func (i *ASCIIArt) SetContents(c []string) {
