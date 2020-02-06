@@ -14,12 +14,15 @@ type Menu struct {
 	bg, fg                 termbox.Attribute
 	selectedBg, selectedFg termbox.Attribute
 	disabledBg, disabledFg termbox.Attribute
+	selectedDisabledBg     termbox.Attribute
+	selectedDisabledFg     termbox.Attribute
 	activeFg, activeBg     termbox.Attribute
 	isDone                 bool
 	bordered               bool
 	vimMode                bool
 	tabSkip                bool
 	active                 bool
+	canSelectDisabled      bool
 }
 
 // CreateMenu Creates a menu with the specified attributes
@@ -189,9 +192,11 @@ func (c *Menu) SelectPrevOption() {
 	for idx >= 0 {
 		idx--
 		testOption := c.GetOptionFromIndex(idx)
-		if testOption != nil && !testOption.IsDisabled() {
-			c.SetSelectedOption(testOption)
-			return
+		if testOption != nil {
+			if c.canSelectDisabled || !testOption.IsDisabled() {
+				c.SetSelectedOption(testOption)
+				return
+			}
 		}
 	}
 }
@@ -202,9 +207,11 @@ func (c *Menu) SelectNextOption() {
 	for idx < len(c.options) {
 		idx++
 		testOption := c.GetOptionFromIndex(idx)
-		if testOption != nil && !testOption.IsDisabled() {
-			c.SetSelectedOption(testOption)
-			return
+		if testOption != nil {
+			if c.canSelectDisabled || !testOption.IsDisabled() {
+				c.SetSelectedOption(testOption)
+				return
+			}
 		}
 	}
 }
@@ -265,21 +272,25 @@ func (c *Menu) ShowHelp(b bool) {
 	c.showHelp = b
 }
 
-// GetFgColor returns the foreground color
-func (c *Menu) GetFgColor() termbox.Attribute { return c.fg }
+func (c *Menu) GetFgColor() termbox.Attribute   { return c.fg }
+func (c *Menu) SetFgColor(fg termbox.Attribute) { c.fg = fg }
+func (c *Menu) GetBgColor() termbox.Attribute   { return c.bg }
+func (c *Menu) SetBgColor(bg termbox.Attribute) { c.bg = bg }
 
-// SetFgColor sets the foreground color
-func (c *Menu) SetFgColor(fg termbox.Attribute) {
-	c.fg = fg
-}
+func (c *Menu) GetSelectedFgColor() termbox.Attribute   { return c.selectedFg }
+func (c *Menu) SetSelectedFgColor(fg termbox.Attribute) { c.selectedFg = fg }
+func (c *Menu) GetSelectedBgColor() termbox.Attribute   { return c.selectedBg }
+func (c *Menu) SetSelectedBgColor(bg termbox.Attribute) { c.selectedBg = bg }
 
-// GetBgColor returns the background color
-func (c *Menu) GetBgColor() termbox.Attribute { return c.bg }
+func (c *Menu) GetSelectedDisabledFgColor() termbox.Attribute   { return c.selectedDisabledFg }
+func (c *Menu) SetSelectedDisabledFgColor(fg termbox.Attribute) { c.selectedDisabledFg = fg }
+func (c *Menu) GetSelectedDisabledBgColor() termbox.Attribute   { return c.selectedDisabledBg }
+func (c *Menu) SetSelectedDisabledBgColor(bg termbox.Attribute) { c.selectedDisabledBg = bg }
 
-// SetBgColor sets the current background color
-func (c *Menu) SetBgColor(bg termbox.Attribute) {
-	c.bg = bg
-}
+func (c *Menu) GetDisabledFgColor() termbox.Attribute   { return c.disabledFg }
+func (c *Menu) SetDisabledFgColor(fg termbox.Attribute) { c.disabledFg = fg }
+func (c *Menu) GetDisabledBgColor() termbox.Attribute   { return c.disabledBg }
+func (c *Menu) SetDisabledBgColor(bg termbox.Attribute) { c.disabledBg = bg }
 
 // IsDone returns whether the user has answered the modal
 func (c *Menu) IsDone() bool { return c.isDone }
@@ -305,6 +316,10 @@ func (c *Menu) EnableVimMode() {
 // DisableVimMode Disables h,j,k,l navigation
 func (c *Menu) DisableVimMode() {
 	c.vimMode = false
+}
+
+func (c *Menu) SetCanSelectDisabled(b bool) {
+	c.canSelectDisabled = b
 }
 
 // HandleEvent handles the termbox event and returns whether it was consumed
@@ -391,11 +406,15 @@ func (c *Menu) Draw() {
 			firstDispIdx = c.GetSelectedIndex() - (c.height - 2)
 			lastDispIdx = c.GetSelectedIndex()
 		}
-		for idx := firstDispIdx; idx < lastDispIdx; idx++ {
+		for idx := firstDispIdx; idx < lastDispIdx+1; idx++ {
 			currOpt := &c.options[idx]
 			outTxt := currOpt.GetText()
 			if currOpt.IsDisabled() {
-				DrawStringAtPoint(outTxt, optionStartX, optionStartY, c.disabledFg, c.disabledBg)
+				if c.GetSelectedOption() == currOpt {
+					DrawStringAtPoint(outTxt, optionStartX, optionStartY, c.selectedDisabledFg, c.selectedDisabledBg)
+				} else {
+					DrawStringAtPoint(outTxt, optionStartX, optionStartY, c.disabledFg, c.disabledBg)
+				}
 			} else if c.GetSelectedOption() == currOpt {
 				DrawStringAtPoint(outTxt, optionStartX, optionStartY, c.selectedFg, c.selectedBg)
 			} else {
