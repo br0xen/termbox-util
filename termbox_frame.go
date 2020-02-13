@@ -204,11 +204,15 @@ func (c *Frame) GetBottomY() int {
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
 func (c *Frame) HandleEvent(event termbox.Event) bool {
-	if event.Key == termbox.KeyTab {
-		c.FindNextTabStop()
+	if c.controls[c.tabIdx].HandleEvent(event) {
 		return true
 	}
-	return c.controls[c.tabIdx].HandleEvent(event)
+	if event.Key == termbox.KeyTab {
+		ret := !c.IsOnLastControl()
+		c.FindNextTabStop()
+		return ret
+	}
+	return false
 }
 
 // FindNextTabStop finds the next control that can be tabbed to

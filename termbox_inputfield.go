@@ -1,6 +1,10 @@
 package termboxUtil
 
-import "github.com/nsf/termbox-go"
+import (
+	"strconv"
+
+	"github.com/nsf/termbox-go"
+)
 
 // InputField is a field for inputting text
 type InputField struct {
@@ -17,6 +21,8 @@ type InputField struct {
 	multiline           bool
 	tabSkip             bool
 	active              bool
+
+	filter func(*InputField, string, string) string
 }
 
 // CreateInputField creates an input field at x, y that is w by h
@@ -24,6 +30,7 @@ func CreateInputField(x, y, w, h int, fg, bg termbox.Attribute) *InputField {
 	c := InputField{x: x, y: y, width: w, height: h,
 		fg: fg, bg: bg, cursorFg: bg, cursorBg: fg, activeFg: fg, activeBg: bg,
 	}
+	c.filter = func(fld *InputField, o, n string) string { return n }
 	return &c
 }
 
@@ -53,58 +60,44 @@ func (c *InputField) SetValue(s string) {
 func (c *InputField) GetX() int { return c.x }
 
 // SetX sets the x position of the input field
-func (c *InputField) SetX(x int) {
-	c.x = x
-}
+func (c *InputField) SetX(x int) { c.x = x }
 
 // GetY returns the y position of the input field
 func (c *InputField) GetY() int { return c.y }
 
 // SetY sets the y position of the input field
-func (c *InputField) SetY(y int) {
-	c.y = y
-}
+func (c *InputField) SetY(y int) { c.y = y }
 
 // GetWidth returns the current width of the input field
 func (c *InputField) GetWidth() int { return c.width }
 
 // SetWidth sets the current width of the input field
-func (c *InputField) SetWidth(w int) {
-	c.width = w
-}
+func (c *InputField) SetWidth(w int) { c.width = w }
 
 // GetHeight returns the current height of the input field
 func (c *InputField) GetHeight() int { return c.height }
 
 // SetHeight sets the current height of the input field
-func (c *InputField) SetHeight(h int) {
-	c.height = h
-}
+func (c *InputField) SetHeight(h int) { c.height = h }
 
 // GetFgColor returns the foreground color
 func (c *InputField) GetFgColor() termbox.Attribute { return c.fg }
 
 // SetFgColor sets the foreground color
-func (c *InputField) SetFgColor(fg termbox.Attribute) {
-	c.fg = fg
-}
+func (c *InputField) SetFgColor(fg termbox.Attribute) { c.fg = fg }
 
 // GetBgColor returns the background color
 func (c *InputField) GetBgColor() termbox.Attribute { return c.bg }
 
 // SetBgColor sets the current background color
-func (c *InputField) SetBgColor(bg termbox.Attribute) {
-	c.bg = bg
-}
+func (c *InputField) SetBgColor(bg termbox.Attribute) { c.bg = bg }
 
-func (c *InputField) SetCursorFg(fg termbox.Attribute) {
-	c.cursorFg = fg
-}
+func (c *InputField) SetCursorFg(fg termbox.Attribute) { c.cursorFg = fg }
+
 func (c *InputField) GetCursorFg() termbox.Attribute { return c.cursorFg }
 
-func (c *InputField) SetCursorBg(bg termbox.Attribute) {
-	c.cursorBg = bg
-}
+func (c *InputField) SetCursorBg(bg termbox.Attribute) { c.cursorBg = bg }
+
 func (c *InputField) GetCursorBg() termbox.Attribute { return c.cursorBg }
 
 // IsBordered returns true or false if this input field has a border
@@ -143,6 +136,10 @@ func (c *InputField) SetMultiline(b bool) {
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
 func (c *InputField) HandleEvent(event termbox.Event) bool {
+	prev := c.value
+	if event.Key == termbox.KeyTab { // There is no tabbing in here
+		return false
+	}
 	if event.Key == termbox.KeyBackspace || event.Key == termbox.KeyBackspace2 {
 		if c.cursor+len(c.value) > 0 {
 			crs := len(c.value)
@@ -193,6 +190,7 @@ func (c *InputField) HandleEvent(event termbox.Event) bool {
 			c.value = strPt1 + string(ch) + strPt2
 		}
 	}
+	c.value = c.filter(c, prev, c.value)
 	return true
 }
 
@@ -293,4 +291,17 @@ func (c *InputField) Draw() {
 		}
 		DrawStringAtPoint(strPt2, x+1, y, useFg, useBg)
 	}
+}
+
+func (c *InputField) SetTextFilter(filter func(*InputField, string, string) string) {
+	c.filter = filter
+}
+
+// Some handy text filters
+func (c *InputField) InputFieldNumberFilter(fld *InputField, o, n string) string {
+	_, err := strconv.Atoi(n)
+	if err != nil {
+		return o
+	}
+	return n
 }
