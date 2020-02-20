@@ -21,6 +21,7 @@ type InputField struct {
 	multiline           bool
 	tabSkip             bool
 	active              bool
+	justified           bool
 
 	filter func(*InputField, string, string) string
 }
@@ -132,6 +133,10 @@ func (c *InputField) IsMultiline() bool { return c.multiline }
 // SetMultiline sets whether the field can have multiple lines
 func (c *InputField) SetMultiline(b bool) {
 	c.multiline = b
+}
+
+func (c *InputField) SetJustified(b bool) {
+	c.justified = b
 }
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
@@ -283,7 +288,11 @@ func (c *InputField) Draw() {
 				strPt2 = strPt2[:len(strPt2)-1]
 			}
 		}
-		x, y = DrawStringAtPoint(strPt1, c.x+len(c.title), c.y, useFg, useBg)
+		stX := c.x + len(c.title)
+		if c.justified {
+			stX = c.x + c.width - len(strPt1) - len(strPt2) - 1
+		}
+		x, y = DrawStringAtPoint(strPt1, stX, c.y, useFg, useBg)
 		if c.active {
 			termbox.SetCell(x, y, cursorRune, c.cursorFg, c.cursorBg)
 		} else {
