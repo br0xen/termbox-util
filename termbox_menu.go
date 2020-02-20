@@ -34,6 +34,7 @@ func CreateMenu(title string, options []string, x, y, width, height int, fg, bg 
 		disabledFg: bg, disabledBg: bg,
 		activeFg: fg, activeBg: bg,
 		bordered: true,
+		tabSkip:  false,
 	}
 	for _, line := range options {
 		c.options = append(c.options, MenuOption{text: line})
@@ -58,11 +59,8 @@ func (c *Menu) GetID() string { return c.id }
 // SetID sets this control's ID
 func (c *Menu) SetID(newID string) { c.id = newID }
 
-// IsTabSkipped is always true for a label
-func (c *Menu) IsTabSkipped() bool { return true }
-
-// This doesn't do anything for a label
-func (c *Menu) SetTabSkip(b bool) {}
+func (c *Menu) IsTabSkipped() bool { return c.tabSkip }
+func (c *Menu) SetTabSkip(b bool)  { c.tabSkip = b }
 
 // GetTitle returns the current title of the menu
 func (c *Menu) GetTitle() string { return c.title }

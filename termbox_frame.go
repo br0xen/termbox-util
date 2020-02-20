@@ -1,6 +1,10 @@
 package termboxUtil
 
-import "github.com/nsf/termbox-go"
+import (
+	"fmt"
+
+	"github.com/nsf/termbox-go"
+)
 
 // Frame is a frame for holding other elements
 // It manages it's own x/y, tab index
@@ -15,6 +19,8 @@ type Frame struct {
 	tabSkip             bool
 	active              bool
 	title               string
+	status              string
+	rightStatus         string
 }
 
 // CreateFrame creates a Frame at x, y that is w by h
@@ -27,6 +33,8 @@ func CreateFrame(x, y, w, h int, fg, bg termbox.Attribute) *Frame {
 }
 
 func (c *Frame) SetTitle(title string) { c.title = title }
+
+func (c *Frame) SetStatus(status string) { c.status = status }
 
 // Setting color attributes on a frame trickles down to its controls
 func (c *Frame) SetActiveFgColor(fg termbox.Attribute) {
@@ -57,80 +65,58 @@ func (c *Frame) IsActive() bool { return c.active }
 func (c *Frame) GetID() string { return c.id }
 
 // SetID sets this control's ID
-func (c *Frame) SetID(newID string) {
-	c.id = newID
-}
+func (c *Frame) SetID(newID string) { c.id = newID }
 
 // GetX returns the x position of the frame
 func (c *Frame) GetX() int { return c.x }
 
 // SetX sets the x position of the frame
-func (c *Frame) SetX(x int) {
-	c.x = x
-}
+func (c *Frame) SetX(x int) { c.x = x }
 
 // GetY returns the y position of the frame
 func (c *Frame) GetY() int { return c.y }
 
 // SetY sets the y position of the frame
-func (c *Frame) SetY(y int) {
-	c.y = y
-}
+func (c *Frame) SetY(y int) { c.y = y }
 
 // GetWidth returns the current width of the frame
 func (c *Frame) GetWidth() int { return c.width }
 
 // SetWidth sets the current width of the frame
-func (c *Frame) SetWidth(w int) {
-	c.width = w
-}
+func (c *Frame) SetWidth(w int) { c.width = w }
 
 // GetHeight returns the current height of the frame
 func (c *Frame) GetHeight() int { return c.height }
 
 // SetHeight sets the current height of the frame
-func (c *Frame) SetHeight(h int) {
-	c.height = h
-}
+func (c *Frame) SetHeight(h int) { c.height = h }
 
 // GetFgColor returns the foreground color
 func (c *Frame) GetFgColor() termbox.Attribute { return c.fg }
 
 // SetFgColor sets the foreground color
-func (c *Frame) SetFgColor(fg termbox.Attribute) {
-	c.fg = fg
-}
+func (c *Frame) SetFgColor(fg termbox.Attribute) { c.fg = fg }
 
 // GetBgColor returns the background color
 func (c *Frame) GetBgColor() termbox.Attribute { return c.bg }
 
 // SetBgColor sets the current background color
-func (c *Frame) SetBgColor(bg termbox.Attribute) {
-	c.bg = bg
-}
+func (c *Frame) SetBgColor(bg termbox.Attribute) { c.bg = bg }
 
 // IsBordered returns true or false if this frame has a border
 func (c *Frame) IsBordered() bool { return c.bordered }
 
 // SetBordered sets whether we render a border around the frame
-func (c *Frame) SetBordered(b bool) {
-	c.bordered = b
-}
+func (c *Frame) SetBordered(b bool) { c.bordered = b }
 
 // IsTabSkipped returns whether this modal has it's tabskip flag set
-func (c *Frame) IsTabSkipped() bool {
-	return c.tabSkip
-}
+func (c *Frame) IsTabSkipped() bool { return c.tabSkip }
 
 // SetTabSkip sets the tabskip flag for this control
-func (c *Frame) SetTabSkip(b bool) {
-	c.tabSkip = b
-}
+func (c *Frame) SetTabSkip(b bool) { c.tabSkip = b }
 
 // AddControl adds a control to the frame
-func (c *Frame) AddControl(t termboxControl) {
-	c.controls = append(c.controls, t)
-}
+func (c *Frame) AddControl(t termboxControl) { c.controls = append(c.controls, t) }
 
 func (c *Frame) ResetTabIndex() {
 	for k, v := range c.controls {
@@ -204,14 +190,19 @@ func (c *Frame) GetBottomY() int {
 
 // HandleEvent accepts the termbox event and returns whether it was consumed
 func (c *Frame) HandleEvent(event termbox.Event) bool {
+	// If the currently active control consumes the event, we don't need to handle it
 	if c.controls[c.tabIdx].HandleEvent(event) {
+		c.rightStatus = fmt.Sprintf("C (%d/%d)", c.tabIdx, len(c.controls))
 		return true
 	}
+	// All that a frame cares about is tabbing around
 	if event.Key == termbox.KeyTab {
 		ret := !c.IsOnLastControl()
 		c.FindNextTabStop()
+		c.rightStatus = fmt.Sprintf("N (%d/%d)", c.tabIdx, len(c.controls))
 		return ret
 	}
+	c.rightStatus = fmt.Sprintf("B (%d/%d)", c.tabIdx, len(c.controls))
 	return false
 }
 
@@ -273,5 +264,11 @@ func (c *Frame) Draw() {
 			c.controls[idx].SetActive(false)
 		}
 		c.DrawControl(c.controls[idx])
+	}
+	if c.status != "" {
+		DrawStringAtPoint(" "+c.status+" ", c.x+1, c.y+c.height, borderFg, borderBg)
+	}
+	if c.rightStatus != "" {
+		DrawStringAtPoint(" "+c.rightStatus+" ", (c.x+c.width)-len(c.rightStatus)-2, c.y+c.height, borderFg, borderBg)
 	}
 }
